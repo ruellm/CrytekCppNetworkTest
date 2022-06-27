@@ -307,18 +307,16 @@ int MainClient(int argc, char *argv[])
 		}
 
 		// Check if we are still allowed to continue after pause 
-		// or terminate application due to connection problem from server
+		// or terminate application due to running out of retry attempt
 		if (g_done)
 			break;
 
-		std::cout << "Sending (" << i << ") with message: " << options.message << "\n" << std::endl;
+		std::cout << "Sending (" << i++ << ") with message: " << options.message << "\n" << std::endl;
 		SendStringMessage(options.message);
 
 		if (options.frequency != -1)
 		{
-			if (i < options.frequency)
-				i++;
-			else
+			if (i >= options.frequency)
 				break;
 		}
 

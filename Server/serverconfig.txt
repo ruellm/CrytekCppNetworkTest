@@ -1,3 +1,4 @@
 id server0
 port 9000
-numOfThreads 100
+numOfThreads 2
+dynamic true

@@ -14,6 +14,8 @@ void CServerConfigLoader::Process(const std::string& line)
 		m_config.port = std::stoi(tokens[1]);
 	else if (tokens[0].compare("numOfThreads") == 0)
 		m_config.numOfThreads = std::stoi(tokens[1]);
+	else if (tokens[0].compare("dynamic") == 0)
+		m_config.dynamic = tokens[1] == "true" ? true : false;
 }
 
 const SServerConfig& CServerConfigLoader::Get()
