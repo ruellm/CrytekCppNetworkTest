@@ -3,7 +3,7 @@
 #include "ThreadPool.h"
 #include "Config/ServerConfig.h"
 #include "Config/PeersConfig.h"
-#include "ISocketBase.h"
+#include "Common/ISocketBase.h"
 
 class CEchoDistributedServer
 {

@@ -11,13 +11,13 @@ enum class PacketType : int
 struct SPacketHeader
 {
 	PacketType type;
-	int size = 0;
+	size_t size = 0;
 };
 
 struct IPacketBase
 {
 	SPacketHeader header;
-	virtual char* Serialize(int* len) = 0;
+	virtual char* Serialize(size_t* len) = 0;
 	virtual void Deserialized(char* buffer, int len) = 0;
 };
 
@@ -27,7 +27,7 @@ struct SPacketStringMessage : public IPacketBase
 	SPacketStringMessage();
 	void Set(const std::string& message);
 
-	virtual char* Serialize(int* len) override;
+	virtual char* Serialize(size_t* len) override;
 	virtual void Deserialized(char* buffer, int len) override;
 };
 

@@ -11,10 +11,10 @@ namespace Test
 		message.Set("The quick brown fox jumps over the lazy dog");
 
 		char* buffer = nullptr;
-		int len = 0;
+		size_t len = 0;
 
 		buffer = message.Serialize(&len);
-		auto result = PacketBuilder::Build(buffer, len);
+		auto result = PacketBuilder::Build(buffer, (int)len);
 		SPacketStringMessage* derived = dynamic_cast<SPacketStringMessage*>(result.get());
 		
 		assert(message.header.type == derived->header.type);

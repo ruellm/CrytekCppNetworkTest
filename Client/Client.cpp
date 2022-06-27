@@ -5,7 +5,7 @@
 //#define RUN_TEST
 
 #include "Network/PacketBuilder.h"
-#include "SocketFactory.h"
+#include "Common/SocketFactory.h"
 #include "ServerListLoader.h"
 
 #ifdef RUN_TEST
@@ -58,11 +58,11 @@ static std::mutex				g_socketMutex;
 void Send(IPacketBase* packet)
 {
 	char* buffer = nullptr;
-	int len = 0;
+	size_t len = 0;
 	buffer = packet->Serialize(&len);
 
 	// write the packet
-	int res = g_socket->Write(buffer, len);
+	int res = g_socket->Write(buffer, (int)len);
 	if (res <= 0)
 	{
 		std::cout << "Unable to send message \n" << std::endl;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ServerConfig.h"
-#include "ConfigLoader.h"
+#include "Common/ConfigLoader.h"
 
 class CServerConfigLoader : public CConfigLoader
 {

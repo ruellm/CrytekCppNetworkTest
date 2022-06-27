@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PeersConfig.h"
-#include "ConfigLoader.h"
+#include "Common/ConfigLoader.h"
 
 #include <vector>
 

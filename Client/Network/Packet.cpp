@@ -11,9 +11,9 @@ void SPacketStringMessage::Set(const std::string& message_)
 	header.size = message.size();
 }
 
-char* SPacketStringMessage::Serialize(int* len)
+char* SPacketStringMessage::Serialize(size_t* len)
 {
-	int datasize = message.size();
+	size_t datasize = message.size();
 	size_t buffer_size = sizeof(SPacketHeader) + datasize;
 	char* buffer = new char[buffer_size];
 
