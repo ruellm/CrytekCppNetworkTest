@@ -1,4 +1,5 @@
 #include "Packet.h"
+#include <cstring>
 
 SPacketStringMessage::SPacketStringMessage()
 {
@@ -24,7 +25,7 @@ char* SPacketStringMessage::Serialize(size_t* len)
 	bufhdr->size = datasize;
 
 	// copy over the data
-	memcpy(buffer + sizeof(SPacketHeader), message.c_str(), datasize);
+	std::memcpy(buffer + sizeof(SPacketHeader), message.c_str(), datasize);
 
 	*len = buffer_size;
 
@@ -38,7 +39,7 @@ void SPacketStringMessage::Deserialized(char* buffer, int len)
 	header.size = bufhdr->size;
 
 	char* msg = new char[header.size + 1];
-	memcpy(msg, buffer + sizeof(SPacketHeader), header.size);
+	std::memcpy(msg, buffer + sizeof(SPacketHeader), header.size);
 	msg[header.size] = '\0';
 	message = std::string(msg);
 

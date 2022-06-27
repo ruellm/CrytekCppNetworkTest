@@ -1,4 +1,5 @@
 #include "PacketBuilder.h"
+#include <memory>
 
 namespace PacketBuilder
 {

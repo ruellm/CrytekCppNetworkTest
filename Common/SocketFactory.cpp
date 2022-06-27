@@ -1,5 +1,9 @@
 #include "SocketFactory.h"
+#ifdef WIN32
 #include "WindowsSocket.h"
+#else
+#include "PosixSocket.h"
+#endif
 
 namespace SocketFactory
 {
@@ -9,7 +13,7 @@ namespace SocketFactory
 		CWindowsSocket::Initialize();
 		return std::make_shared<CWindowsSocket>();
 #else
-		return nullptr;
+		return std::make_shared<CPosixSocket>();
 #endif
 	}
 
