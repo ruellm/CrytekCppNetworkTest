@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 enum class PacketType : int
 {
