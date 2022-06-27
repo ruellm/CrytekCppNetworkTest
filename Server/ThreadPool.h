@@ -46,7 +46,7 @@ public:
 	void QueueTask(ThreadPoolTask t);
 	void Stop();
 
-	void Initialize(int numThreads, bool dynamic);
+	void Initialize(int numThreads, bool expand);
 	
 	inline bool IsStopping() const {
 		return m_state == State::Stopping;
@@ -72,7 +72,7 @@ private:
 	SAtomicCounter m_counter;	// counter for busy thread
 	
 	int m_lastId;
-	bool m_dynamic;
+	bool m_expand;
 
 	bool Execute();
 	void Mark(int index);

@@ -47,7 +47,7 @@ void CEchoDistributedServer::Run(const PeersList& peers)
 		return;
 	}
 
-	m_pool.Initialize(m_config.numOfThreads, m_config.dynamic);
+	m_pool.Initialize(m_config.numOfThreads, m_config.expand);
 
 	ConnectToPeers(peers);
 

@@ -1,7 +1,8 @@
 #include "ThreadPool.h"
 #include <iostream>
 
-CThreadPool::CThreadPool() : m_state(State::Stopped), m_lastId(0)
+CThreadPool::CThreadPool() 
+	: m_state(State::Stopped), m_lastId(0)
 {}
 
 CThreadPool::~CThreadPool()
@@ -9,10 +10,10 @@ CThreadPool::~CThreadPool()
 	Stop();
 }
 
-void CThreadPool::Initialize(int numThreads, bool dynamic)
+void CThreadPool::Initialize(int numThreads, bool expand)
 {
 	m_maxThreads = numThreads;
-	m_dynamic = dynamic;
+	m_expand = expand;
 
 	for (m_lastId = 0; m_lastId < m_maxThreads; m_lastId++)
 		m_threads[m_lastId] = new std::thread(ProcessTask, this, m_lastId);
@@ -25,7 +26,7 @@ void CThreadPool::QueueTask(ThreadPoolTask t)
 	if (IsStopping())
 		return;
 
-	if (m_dynamic && m_counter.Get() >= m_maxThreads)
+	if (m_expand && m_counter.Get() >= m_maxThreads)
 	{
 		// check for finished thread and delete them before spawning new one
 		for (int i = 0; i < m_finished.size(); i++)
