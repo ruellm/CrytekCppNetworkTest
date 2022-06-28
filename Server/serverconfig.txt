@@ -1,4 +1,0 @@
-id server0
-port 9000
-numOfThreads 2
-expand true

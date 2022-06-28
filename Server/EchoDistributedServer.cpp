@@ -79,7 +79,7 @@ void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& s
 
 bool CEchoDistributedServer::BasicHandShake(const std::string& id)
 {
-	return id.find("server_") != 0;
+	return id.find("server_") == 0;
 }
 
 void CEchoDistributedServer::ConfirmIdentity(SocketPtr& socket, bool peers)
