@@ -4,9 +4,12 @@
 // Uncomment this line to run custom unit testing
 //#define RUN_TEST
 
-#include "Network/PacketBuilder.h"
+#include "Common/PacketBuilder.h"
+#include "Common/PacketStringMessage.h"
 #include "Common/SocketFactory.h"
 #include "Config/ServerListLoader.h"
+#include "Common/PacketIdentity.h"
+#include "Common/PacketSender.h"
 
 #ifdef RUN_TEST
 #include "Test/Test.h"
@@ -32,6 +35,7 @@ struct SClientOptions
 	std::string host;
 	std::string serverFile;
 	std::string message = "Hello World";
+	std::string id;
 
 	int sendDelay = 5;
 	int port = 0;
@@ -54,29 +58,20 @@ static std::atomic<bool>		g_pause(false);
 static std::condition_variable	g_condition;
 static std::mutex				g_mutex;
 static std::mutex				g_socketMutex;
+static std::string				g_id;
 
-void Send(IPacketBase* packet)
+void ExitWithError(const std::string& error)
 {
-	char* buffer = nullptr;
-	size_t len = 0;
-	buffer = packet->Serialize(&len);
-
-	// write the packet
-	int res = g_socket->Write(buffer, (int)len);
-	if (res <= 0)
-	{
-		std::cout << "Unable to send message \n" << std::endl;
-	}
-
-	delete[] buffer;
+	std::cout << error << "\n";
+	exit(1);
 }
 
 void SendStringMessage(const std::string& message)
 {
 	SPacketStringMessage packet;
-	packet.Set(message);
+	packet.message = message;
 
-	Send(&packet);
+	PacketSender::Send(&packet, g_socket);
 }
 
 void Help()
@@ -85,6 +80,7 @@ void Help()
 		<< "Usage Client [OPTIONS]\n"
 		<< "Options:\n\n"
 		<< "    -h,--help  Display Help\n"
+		<< "    -i, --id <string> Client identity in the network (REQUIRED). \n"
 		<< "    --frequency <number> number of times this client will send the message, (-1) sends forever, (default is 1). \n"
 		<< "    --reconnect-retry <number> number of times to retry reconnect when disconnected from server (default is 3). \n"
 		<< "    --reconnect-delay <number> number of seconds to wait before next reconnect attempt in seconds (default is 5 seconds). \n"
@@ -96,7 +92,7 @@ void Help()
 		<< "      to the first address in the list, if connection fails then it will move to the next one. \n\n"
 		<< "General Guideline:\n\n"
 		<< "    When --host and --port is specified, it takes higher precedence than --servers. That means the client will attempt\n"
-		<< "    to connect to the specified host first, if connection fails then it will go thru the list provided in the server list file. \n\n";
+		<< "    to connect to the specified host first, if connection fails then it will go thru the list provided in the server list file. \n\n\n";
 
 	exit(0);
 }
@@ -117,7 +113,8 @@ void AttemptConnect()
 		}
 	}
 
-	throw std::runtime_error("Unable to connect to any server specified");
+	std::cout << "[ERROR] Unable to connect to any server specified\n";
+	exit(1);
 }
 
 void ProcessPacket(PacketPtr packet)
@@ -232,6 +229,10 @@ SClientOptions LoadProgramOptions(int argc, char *argv[])
 		{
 			config.sendDelay = std::stoi(argv[++i]);
 		}
+		else if (arg == "-i" || arg == "--id" && i + 1 < argc)
+		{
+			config.id = argv[++i];
+		}
 		else if (arg == "--reconnect-delay" && i + 1 < argc)
 		{
 			config.reconnectDelay = std::stoi(argv[++i]);
@@ -277,6 +278,41 @@ void BuildServerList(const SClientOptions& options)
 	}
 }
 
+void LoginIdentity(const std::string& id)
+{
+	if (id.size() == 0)
+	{
+		std::cout << "[ERROR] Client ID is required \n";
+		exit(1);
+	}
+
+	SPacketIdentiy identity(id);
+
+	PacketSender::Send(&identity, g_socket);
+
+	const int MAX_BUFFER_LEN = 2000;
+	char buffer[MAX_BUFFER_LEN];
+
+	int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
+	if (len <= 0)
+	{
+		ExitWithError("[ERROR] Server Error in confirming Identity ");
+	}
+
+	auto packet = PacketBuilder::Build(buffer, len);
+	if (packet->header.type != PacketType::Identity)
+	{
+		ExitWithError("[ERROR] Cant confirm Identity from server \n");
+		exit(1);
+	}
+
+	SPacketIdentiy* derived = dynamic_cast<SPacketIdentiy*>(packet.get());
+	if (derived->message != id)
+		ExitWithError("[ERROR] Error in Identity Confirmation");
+
+	g_id = id;
+}
+
 int MainClient(int argc, char *argv[])
 {
 	std::cout << "===== Distributed Echo Client v1.0 ==== \n\n";
@@ -289,6 +325,9 @@ int MainClient(int argc, char *argv[])
 
 	// attempt to connect from server list
 	AttemptConnect();
+
+	// Announce our identity to the server
+	LoginIdentity(options.id);
 
 	// Since client receives information from server from broadcast from other client/servers
 	// a read thread is launched separately

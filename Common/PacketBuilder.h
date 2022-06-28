@@ -5,5 +5,5 @@
 
 namespace PacketBuilder
 {
-	PacketPtr Build(char* buffer, int len);
+	PacketPtr Build(char* buffer, size_t len);
 }

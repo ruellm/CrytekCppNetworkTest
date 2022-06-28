@@ -52,6 +52,16 @@ void CThreadPool::QueueTask(ThreadPoolTask t)
 	m_condVariable.notify_one();
 }
 
+void CThreadPool::Join()
+{
+	ThreadMap::iterator it = m_threads.begin();
+
+	while (it != m_threads.end())
+	{
+		it->second->join();
+	}
+}
+
 void CThreadPool::Stop()
 {
 	if (m_state == State::Running)

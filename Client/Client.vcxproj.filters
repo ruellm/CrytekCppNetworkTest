@@ -16,9 +16,6 @@
     <Filter Include="Common">
       <UniqueIdentifier>{8e145e76-0cd8-45c9-8da1-49d8bff4ead0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Network">
-      <UniqueIdentifier>{f3a3b5e7-1a84-4357-aa45-4d47a3252155}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Test">
       <UniqueIdentifier>{e4cf7995-9f9a-4de8-b148-8e247636b1d6}</UniqueIdentifier>
     </Filter>
@@ -39,34 +36,55 @@
     <ClCompile Include="..\Common\ConfigLoader.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Network\Packet.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="Network\PacketBuilder.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="Test\Test.cpp">
       <Filter>Test</Filter>
     </ClCompile>
     <ClCompile Include="Config\ServerListLoader.cpp">
       <Filter>Config</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Packet.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\PacketBuilder.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\PacketStringMessage.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\ByteHandler.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\PacketSender.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ConfigLoader.h">
       <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Network\Packet.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="Network\PacketBuilder.h">
-      <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Test\Test.h">
       <Filter>Test</Filter>
     </ClInclude>
     <ClInclude Include="Config\ServerListLoader.h">
       <Filter>Config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Packet.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketBuilder.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketStringMessage.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ByteHandler.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketIdentity.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketSender.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

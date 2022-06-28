@@ -10,7 +10,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>--id server_1 --port 9000</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--id server_3 --port 9004 --peers C:\repository\CrytekCppNetworkTest\Demo\Windows\peers.txt</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

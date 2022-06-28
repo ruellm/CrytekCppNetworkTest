@@ -54,11 +54,12 @@ void Help()
 		<< "Usage Server [OPTIONS]\n"
 		<< "Options:\n\n"
 		<< "    -h,--help  Display Help\n"
-		<< "    -i,--id <string> server identity (required) \n"
-		<< "    -p,--port <number> server port to listens to (required) \n"
-		<< "    --thread-count <number> max number of threads in the thread pool to \n"
-		<< "    --expand <true/false> will the server expand and create more thread if it runs out \n"
-		<< "    --peers <filename> loads the peers server list from file \n";
+		<< "    -i,--id <string> server identity (REQUIRED) \n"
+		<< "    -p,--port <number> server port to listens to (REQUIRED) \n"
+		<< "    --thread-count <number> max number of threads in the thread pool to (default 100)\n"
+		<< "    --expand <true/false> will the server expand and create more thread if it runs out (default false) \n"
+		<< "    --peers <filename> loads the peers server list from file (optional) \n\n\n";
+	
 	exit(1);
 }
 

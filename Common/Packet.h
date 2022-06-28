@@ -6,6 +6,8 @@
 enum class PacketType : int
 {
 	StringMessage,
+	BroadCastPeer,
+	Identity
 	//For expansion ...
 };
 
@@ -18,18 +20,10 @@ struct SPacketHeader
 struct IPacketBase
 {
 	SPacketHeader header;
+	std::string from;
+
 	virtual char* Serialize(size_t* len) = 0;
 	virtual void Deserialized(char* buffer, int len) = 0;
-};
-
-struct SPacketStringMessage : public IPacketBase
-{
-	std::string message;
-	SPacketStringMessage();
-	void Set(const std::string& message);
-
-	virtual char* Serialize(size_t* len) override;
-	virtual void Deserialized(char* buffer, int len) override;
 };
 
 using PacketPtr = std::unique_ptr<IPacketBase>;

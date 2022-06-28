@@ -45,6 +45,21 @@
     <ClCompile Include="Thread\ThreadPool.cpp">
       <Filter>Thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Packet.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\PacketBuilder.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\ByteHandler.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\PacketStringMessage.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\PacketSender.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ISocketBase.h">
@@ -76,6 +91,12 @@
     </ClInclude>
     <ClInclude Include="Thread\ThreadPool.h">
       <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketIdentity.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketSender.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

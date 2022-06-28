@@ -47,7 +47,8 @@ public:
 	void Stop();
 
 	void Initialize(int numThreads, bool expand);
-	
+	void Join();
+
 	inline bool IsStopping() const {
 		return m_state == State::Stopping;
 	}
