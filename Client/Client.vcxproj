@@ -158,16 +158,16 @@
     <ClCompile Include="..\Common\SocketFactory.cpp" />
     <ClCompile Include="..\Common\WindowsSocket.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Config\ServerListLoader.cpp" />
     <ClCompile Include="Network\Packet.cpp" />
     <ClCompile Include="Network\PacketBuilder.cpp" />
-    <ClCompile Include="ServerListLoader.cpp" />
     <ClCompile Include="Test\Test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ConfigLoader.h" />
+    <ClInclude Include="Config\ServerListLoader.h" />
     <ClInclude Include="Network\Packet.h" />
     <ClInclude Include="Network\PacketBuilder.h" />
-    <ClInclude Include="ServerListLoader.h" />
     <ClInclude Include="Test\Test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <mutex>
 
-CEchoDistributedServer::CEchoDistributedServer(const SServerConfig& config) : m_config(config)
+CEchoDistributedServer::CEchoDistributedServer(const SConfig& config) : m_config(config)
 {}
 
 CEchoDistributedServer::~CEchoDistributedServer()
@@ -51,8 +51,8 @@ void CEchoDistributedServer::Run(const PeersList& peers)
 
 	ConnectToPeers(peers);
 
-	std::cout << "[INFO] Server Running at port " << m_config.port 
-		<< "\nWaiting for clients to connect... " << std::endl;
+	std::cout << "[INFO] Server ("<< m_config.id << ") Running at port " << m_config.port 
+		<< "\n\nWaiting for clients to connect... \n\n" << std::endl;
 	
 	while (true)
 	{
@@ -113,7 +113,7 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket, bool peer)
 		if (!socket)
 			return;
 
-		std::cout << "[INFO] Waiting for read \n" << std::endl;
+		std::cout << "[INFO] Waiting for Message \n" << std::endl;
 
 		int len = socket->Read(buffer, MAX_BUFFER_LEN);
 
@@ -124,7 +124,7 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket, bool peer)
 			return;
 		}
 
-		std::cout << "[INFO]  Broadcasting message \n" << std::endl;
+		std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
 		BroadCastMessage(buffer, len, socket, peer);
 	}
 }

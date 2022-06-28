@@ -1,14 +1,21 @@
 #pragma once
 
-#include "ThreadPool.h"
-#include "Config/ServerConfig.h"
+#include "Thread/ThreadPool.h"
 #include "Config/PeersConfig.h"
 #include "Common/ISocketBase.h"
 
 class CEchoDistributedServer
 {
 public:
-	CEchoDistributedServer(const SServerConfig& config);
+	struct SConfig
+	{
+		std::string id;				// server identity
+		int port = 0;				// server port
+		int numOfThreads = 100;		// the number of threads in the thread pool
+		bool expand = false;		// will the server expand and create more thread if it runs out
+	};
+
+	CEchoDistributedServer(const SConfig& config);
 	~CEchoDistributedServer();
 
 	void Run( const PeersList& peers);
@@ -23,6 +30,6 @@ private:
 private:
 	CThreadPool m_pool;
 	SocketList m_clientList;
-	const SServerConfig& m_config;
+	const SConfig& m_config;
 	std::mutex m_mutex;
 };

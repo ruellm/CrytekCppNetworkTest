@@ -19,6 +19,9 @@
     <Filter Include="Config">
       <UniqueIdentifier>{89501c2c-26a9-49ff-b512-d34eff5e70c4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{3c2edeaa-0950-4f3e-ae4d-a197154b4f0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Server.cpp">
@@ -30,20 +33,17 @@
     <ClCompile Include="..\Common\WindowsSocket.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="Config\ServerConfigLoader.cpp">
-      <Filter>Config</Filter>
-    </ClCompile>
     <ClCompile Include="Config\PeersConfigLoader.cpp">
       <Filter>Config</Filter>
-    </ClCompile>
-    <ClCompile Include="ThreadPool.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EchoDistributedServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\ConfigLoader.cpp">
       <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread\ThreadPool.cpp">
+      <Filter>Thread</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -55,9 +55,6 @@
     </ClInclude>
     <ClInclude Include="..\Common\WindowsSocket.h">
       <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Config\ServerConfigLoader.h">
-      <Filter>Config</Filter>
     </ClInclude>
     <ClInclude Include="Config\PeersConfigLoader.h">
       <Filter>Config</Filter>
@@ -76,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="Config\ServerConfig.h">
       <Filter>Config</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread\ThreadPool.h">
+      <Filter>Thread</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

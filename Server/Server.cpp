@@ -2,12 +2,12 @@
 //
 
 #include "EchoDistributedServer.h"
-#include "Config/ServerConfigLoader.h"
 #include "Config/PeersConfigLoader.h"
 
 #include <iostream>
 #include <stdexcept>
 #include <memory>
+#include <assert.h>   
 
 #ifdef WIN32
 #pragma comment (lib, "Ws2_32.lib")
@@ -17,27 +17,34 @@
 
 struct SServerOptions
 {
-	std::string serverConfig;
+	CEchoDistributedServer::SConfig config;
 	std::string peersConfig;
 };
 
-void VerifyServerConfig(const SServerConfig& config)
+void ExitWithError(const std::string& error)
 {
-	if (config.id.size() == 0)
-		throw std::runtime_error("Server id not found in config, must supply");
-	else if (config.port == 0)
-		throw std::runtime_error("Server port not found in config, must supply");
+	std::cout << error << "\n";
+	exit(1);
+}
+
+void VerifyServerConfig(const CEchoDistributedServer::SConfig& config)
+{
+	if (config.port == 0) 
+		ExitWithError("[ERROR] Port is not specified");
+
+	if (config.id.size() == 0) 
+		ExitWithError("[ERROR] Server ID not found");
 }
 
 void VerifyPeersConfig(const PeersList& config)
 {
 	for (auto & c : config) {
 		if (c.id.size() == 0)
-			throw std::runtime_error("Peer id is empty");
+			ExitWithError("Peer id is empty");
 		else if (c.id.size() == 0)
-			throw std::runtime_error("Peer address is empty");
+			ExitWithError("Peer address is empty");
 		else if (c.port == 0)
-			throw std::runtime_error("Peer port is empty or set to 0");
+			ExitWithError("Peer port is empty or set to 0");
 	}
 }
 
@@ -47,7 +54,10 @@ void Help()
 		<< "Usage Server [OPTIONS]\n"
 		<< "Options:\n\n"
 		<< "    -h,--help  Display Help\n"
-		<< "    --config <filename> loads the server config from file \n"
+		<< "    -i,--id <string> server identity \n"
+		<< "    -p,--port <number> server port to listens to \n"
+		<< "    --thread-count <number> max number of threads in the thread pool to \n"
+		<< "    --expand <true/false> will the server expand and create more thread if it runs out \n"
 		<< "    --peers <filename> loads the peers server list from file \n";
 	exit(1);
 }
@@ -62,9 +72,14 @@ SServerOptions LoadProgramOptions(int argc, char *argv[])
 	for (int i = 1; i < argc; ++i)
 	{
 		std::string arg = argv[i];
-
-		if (arg == "--config" && i + 1 < argc)
-			options.serverConfig = argv[++i];
+		if (arg == "-p" || arg == "--port" && i + 1 < argc)
+			options.config.port = atoi(argv[++i]);
+		else if (arg == "--thread-count" && i + 1 < argc)
+			options.config.numOfThreads = atoi(argv[++i]);
+		else if (arg == "--expand" && i + 1 < argc)
+			options.config.expand = strcmp(argv[++i], "true") == 0 ? true : false;
+		else if (arg == "-i" || arg == "--id" && i + 1 < argc)
+			options.config.id = argv[++i];
 		else if (arg == "--peers" && i + 1 < argc)
 			options.peersConfig = argv[++i];
 		else if (arg == "-h" || arg == "--help")
@@ -76,22 +91,9 @@ SServerOptions LoadProgramOptions(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+	std::cout << "===== Distributed Echo Server v1.0 ==== \n\n";
+
 	auto options = LoadProgramOptions(argc, argv);
-
-	if (options.serverConfig.size() == 0)
-	{
-		std::cout << "[ERROR] Server config not found or specified, "
-			"run with -config [filename] " << std::endl;
-		exit(1);
-	}
-
-	CServerConfigLoader sconfigLoader;
-	if (!sconfigLoader.Load(options.serverConfig))
-	{
-		std::cout << "[ERROR] Unable to load server config file " 
-			<< options.serverConfig << "\n";
-		exit(1);
-	}
 
 	CPeersConfigLoader pconfigLoader;
 	if (!pconfigLoader.Load(options.peersConfig))
@@ -100,13 +102,12 @@ int main(int argc, char *argv[])
 			<< options.peersConfig <<"\n";
 	}
 
-	auto config = sconfigLoader.Get();
 	auto peers = pconfigLoader.Get();
 
-	VerifyServerConfig(config);
+	VerifyServerConfig(options.config);
 	VerifyPeersConfig(peers);
 
-	std::make_shared<CEchoDistributedServer>(config)->Run(peers);
+	std::make_shared<CEchoDistributedServer>(options.config)->Run(peers);
 
 	return 0;
 }

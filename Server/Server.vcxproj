@@ -158,10 +158,9 @@
     <ClCompile Include="..\Common\SocketFactory.cpp" />
     <ClCompile Include="..\Common\WindowsSocket.cpp" />
     <ClCompile Include="Config\PeersConfigLoader.cpp" />
-    <ClCompile Include="Config\ServerConfigLoader.cpp" />
     <ClCompile Include="EchoDistributedServer.cpp" />
     <ClCompile Include="Server.cpp" />
-    <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="Thread\ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ConfigLoader.h" />
@@ -171,9 +170,9 @@
     <ClInclude Include="Config\PeersConfig.h" />
     <ClInclude Include="Config\PeersConfigLoader.h" />
     <ClInclude Include="Config\ServerConfig.h" />
-    <ClInclude Include="Config\ServerConfigLoader.h" />
     <ClInclude Include="EchoDistributedServer.h" />
     <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="Thread\ThreadPool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

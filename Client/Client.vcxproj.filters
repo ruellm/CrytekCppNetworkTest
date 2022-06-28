@@ -22,6 +22,9 @@
     <Filter Include="Test">
       <UniqueIdentifier>{e4cf7995-9f9a-4de8-b148-8e247636b1d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Config">
+      <UniqueIdentifier>{8cdd065e-b2e8-467f-a609-ed26eae13deb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -36,9 +39,6 @@
     <ClCompile Include="..\Common\ConfigLoader.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="ServerListLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Network\Packet.cpp">
       <Filter>Network</Filter>
     </ClCompile>
@@ -48,13 +48,13 @@
     <ClCompile Include="Test\Test.cpp">
       <Filter>Test</Filter>
     </ClCompile>
+    <ClCompile Include="Config\ServerListLoader.cpp">
+      <Filter>Config</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ConfigLoader.h">
       <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="ServerListLoader.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Network\Packet.h">
       <Filter>Network</Filter>
@@ -64,6 +64,9 @@
     </ClInclude>
     <ClInclude Include="Test\Test.h">
       <Filter>Test</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\ServerListLoader.h">
+      <Filter>Config</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
