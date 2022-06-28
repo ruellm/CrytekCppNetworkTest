@@ -1,0 +1,3 @@
+server_1 localhost 9001
+server_2 localhost 9003
+server_3 localhost 9005

@@ -12,10 +12,8 @@ namespace PacketSender
 		// write the packet
 		int res = socket->Write(buffer, (int)len);
 		if (res <= 0)
-		{
 			std::cout << "Unable to send message \n" << std::endl;
-		}
-
+	
 		delete[] buffer;
 	}
 }

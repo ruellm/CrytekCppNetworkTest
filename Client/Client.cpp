@@ -58,7 +58,6 @@ static std::atomic<bool>		g_pause(false);
 static std::condition_variable	g_condition;
 static std::mutex				g_mutex;
 static std::mutex				g_socketMutex;
-static std::string				g_id;
 
 void ExitWithError(const std::string& error)
 {
@@ -295,22 +294,15 @@ void LoginIdentity(const std::string& id)
 
 	int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
 	if (len <= 0)
-	{
 		ExitWithError("[ERROR] Server Error in confirming Identity ");
-	}
 
 	auto packet = PacketBuilder::Build(buffer, len);
 	if (packet->header.type != PacketType::Identity)
-	{
 		ExitWithError("[ERROR] Cant confirm Identity from server \n");
-		exit(1);
-	}
 
 	SPacketIdentiy* derived = dynamic_cast<SPacketIdentiy*>(packet.get());
 	if (derived->message != id)
 		ExitWithError("[ERROR] Error in Identity Confirmation");
-
-	g_id = id;
 }
 
 int MainClient(int argc, char *argv[])
@@ -332,6 +324,8 @@ int MainClient(int argc, char *argv[])
 	// Since client receives information from server from broadcast from other client/servers
 	// a read thread is launched separately
 	std::thread thread(ReadThread, options);
+
+	std::cout << " Running as client " << options.id <<" \n";
 
 	// Start Sending Message (in main thread)
 	int i = 0;

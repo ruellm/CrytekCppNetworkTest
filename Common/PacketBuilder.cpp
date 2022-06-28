@@ -1,6 +1,5 @@
 #include "PacketBuilder.h"
 #include "PacketStringMessage.h"
-//#include "BroadCastPeerMessage.h"
 #include "PacketIdentity.h"
 
 #include <memory>
@@ -19,22 +18,15 @@ namespace PacketBuilder
 				packet = std::make_unique<SPacketStringMessage>();
 				break;
 			}
-#if 0
-		case PacketType::BroadCastPeer:
-			{
-				 packet = std::make_unique<SBroadCastPeerMessage>();
-				 break;
-			}
-#endif
 		case PacketType::Identity:
-		{
-			packet = std::make_unique<SPacketIdentiy>();
-			break;
-		}
+			{
+				packet = std::make_unique<SPacketIdentiy>();
+				break;
+			}
 		}
 
 		if (packet)
-			packet->Deserialized(buffer, len);
+			packet->Deserialized(buffer, (int)len);
 	
 		return std::move(packet);
 	}

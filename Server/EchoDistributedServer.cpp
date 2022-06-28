@@ -39,16 +39,27 @@ PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 		return nullptr;
 	}
 
+	// check if ID already exist
+	SPacketIdentiy* derived = dynamic_cast<SPacketIdentiy*>(packet.get());
+	auto iter = m_clients.find(derived->message);
+	if (iter != m_clients.end())
+	{
+		std::cout << "[ERROR] ID Already exist denied loggin in " << derived->message << "\n";
+		return nullptr;
+	}
+
 	return std::move(packet);
 }
 
 void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& socket)
 {
-	m_pool.QueueTask([socket, this]() mutable {
+	m_pool.QueueTask([socket, this]() mutable 
+	{
 		RunSockets(socket, true);
 	});
 
-	m_pool.QueueTask([peers, this]() mutable {
+	m_pool.QueueTask([peers, this]() mutable 
+	{
 		for (auto p : peers)
 		{
 			if (p.id == m_config.id)
@@ -70,7 +81,8 @@ void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& s
 
 			AddClient(socket, p.id);
 
-			m_pool.QueueTask([socket, this]() mutable {
+			m_pool.QueueTask([socket, this]() mutable 
+			{
 				ProcessClient(socket);
 			});
 		}
@@ -85,8 +97,8 @@ bool CEchoDistributedServer::BasicHandShake(const std::string& id)
 void CEchoDistributedServer::ConfirmIdentity(SocketPtr& socket, bool peers)
 {
 	std::cout << "[INFO] Confirming Identity ... ";
-	m_pool.QueueTask([socket, peers, this]() mutable {
-
+	m_pool.QueueTask([socket, peers, this]() mutable 
+	{
 		auto packet = ValidateIdentity(socket);
 		if (!packet)
 			return;
@@ -187,8 +199,8 @@ void CEchoDistributedServer::BroadCastMessage(char* buffer, size_t len,
 	while (it != m_clients.end())
 	{
 		auto socket = it->second;
-		m_pool.QueueTask([socket, buffer, len, origin, sender, this]() mutable {
-
+		m_pool.QueueTask([socket, buffer, len, origin, sender, this]() mutable 
+		{
 			// if receiver is a peer, set sender using new id?
 			auto id = GetSocketId(socket);
 
