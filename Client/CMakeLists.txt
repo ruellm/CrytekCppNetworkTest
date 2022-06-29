@@ -18,6 +18,7 @@ add_executable(Client
         ../Common/PacketBuilder.cpp
         ../Common/PacketSender.cpp
         ../Common/PacketStringMessage.cpp
+        ../Common/Tokenizer.cpp
         Test/Test.cpp
         )
 
