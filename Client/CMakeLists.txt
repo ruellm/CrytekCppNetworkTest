@@ -6,13 +6,19 @@ add_definitions(-DUNIX)
 
 add_executable(Client
         Client.cpp
-        ServerListLoader.cpp
+        Config/ServerListLoader.cpp
         ../Common/ConfigLoader.cpp
         ../Common/SocketFactory.cpp
         ../Common/PosixSocket.cpp
+        ../Common/ConfigLoader.cpp
+        ../Common/SocketFactory.cpp
+        ../Common/PosixSocket.cpp
+        ../Common/ByteHandler.cpp
+        ../Common/Packet.cpp
+        ../Common/PacketBuilder.cpp
+        ../Common/PacketSender.cpp
+        ../Common/PacketStringMessage.cpp
         Test/Test.cpp
-        Network/Packet.cpp
-        Network/PacketBuilder.cpp
         )
 
 target_include_directories(Client PUBLIC ../ )

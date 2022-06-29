@@ -1,7 +1,7 @@
 :: Run 3 servers
 start Server.exe --id server_1 --port 9000
-start Server.exe --id server_2 --port 9002 --peers peers.txt
-start Server.exe --id server_3 --port 9004 --peers peers.txt
+start Server.exe --id server_2 --port 9002 --peers ../peers.txt
+start Server.exe --id server_3 --port 9004 --peers ../peers.txt
 
 :: Run clients connected to each servers
 start Client.exe --id client_1 --host localhost --port 9000 --frequency -1 --delay 1 --message "Hello from client 1"

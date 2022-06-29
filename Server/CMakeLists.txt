@@ -7,12 +7,16 @@ add_definitions(-DUNIX)
 add_executable(Server
         Server.cpp
         EchoDistributedServer.cpp
-        ThreadPool.cpp
+        Thread/ThreadPool.cpp
         Config/PeersConfigLoader.cpp
-        Config/ServerConfigLoader.cpp
         ../Common/ConfigLoader.cpp
         ../Common/SocketFactory.cpp
         ../Common/PosixSocket.cpp
+        ../Common/ByteHandler.cpp
+        ../Common/Packet.cpp
+        ../Common/PacketBuilder.cpp
+        ../Common/PacketSender.cpp
+        ../Common/PacketStringMessage.cpp
         )
 
 target_include_directories(Server PUBLIC ../ )

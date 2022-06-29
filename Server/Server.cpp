@@ -7,7 +7,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <memory>
-#include <assert.h>   
+#include <assert.h>
+#include <string.h>
 
 #ifdef WIN32
 #pragma comment (lib, "Ws2_32.lib")

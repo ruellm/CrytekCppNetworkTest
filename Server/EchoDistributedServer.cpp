@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <mutex>
-
+#include <string.h>
 #define MAX_BUFFER_LEN			1024
 
 CEchoDistributedServer::CEchoDistributedServer(const SConfig& config) : m_config(config)

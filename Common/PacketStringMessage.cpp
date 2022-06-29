@@ -1,3 +1,4 @@
+#include <cstring>
 #include "PacketStringMessage.h"
 #include "ByteHandler.h"
 

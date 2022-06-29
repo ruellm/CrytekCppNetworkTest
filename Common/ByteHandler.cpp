@@ -1,5 +1,6 @@
 #include "ByteHandler.h"
 #include <string>
+#include <string.h>
 
 namespace ByteHandler
 {
