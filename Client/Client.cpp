@@ -58,6 +58,9 @@ static std::atomic<bool>		g_pause(false);
 static std::condition_variable	g_condition;
 static std::mutex				g_mutex;
 static std::mutex				g_socketMutex;
+static std::string				g_id;
+
+void LoginIdentity(const std::string& id);
 
 void ExitWithError(const std::string& error)
 {
@@ -121,11 +124,11 @@ void ProcessPacket(PacketPtr packet)
 	switch (packet->header.type)
 	{
 	case PacketType::StringMessage:
-		{
-			SPacketStringMessage* derived = dynamic_cast<SPacketStringMessage*>(packet.get());
-			std::cout << "String message received: " << derived->message << " \n" << std::endl;
-			break;
-		}
+	{
+		SPacketStringMessage* derived = dynamic_cast<SPacketStringMessage*>(packet.get());
+		std::cout << "String message received: " << derived->message << " \n" << std::endl;
+		break;
+	}
 	}
 }
 
@@ -153,7 +156,7 @@ void ReadThread(const SClientOptions& options)
 	while (true)
 	{
 		int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
-	
+
 		if (g_done)
 			return;
 
@@ -172,6 +175,9 @@ void ReadThread(const SClientOptions& options)
 				std::cout << "Reconnect fail, Exiting ...\n" << std::endl;
 				return;
 			}
+
+			// re login
+			LoginIdentity(g_id);
 
 			// Reconnect happen unpause writing thread
 			std::cout << "Connect success, Resuming operation ...\n" << std::endl;
@@ -279,6 +285,8 @@ void BuildServerList(const SClientOptions& options)
 
 void LoginIdentity(const std::string& id)
 {
+	std::cout << "[INFO] Logging in client \n";
+
 	if (id.size() == 0)
 	{
 		ExitWithError("[ERROR] Client ID is required ");
@@ -307,6 +315,16 @@ void LoginIdentity(const std::string& id)
 	SPacketIdentiy* derived = dynamic_cast<SPacketIdentiy*>(packet.get());
 	if (derived->message != id)
 		ExitWithError("[ERROR] Error in Identity Confirmation");
+
+	g_id = id;
+}
+
+void ValidateOptions(const SClientOptions& options)
+{
+	if (options.sendDelay == 0)
+		ExitWithError("[ERROR] Send Delay should not be 0");
+	if (options.reconnectDelay == 0)
+		ExitWithError("[ERROR] Reconnect Delay should not be 0");
 }
 
 int MainClient(int argc, char *argv[])
@@ -315,6 +333,9 @@ int MainClient(int argc, char *argv[])
 
 	// prepare the options
 	auto options = LoadProgramOptions(argc, argv);
+
+	// validate options
+	ValidateOptions(options);
 
 	// build the server list to connect to
 	BuildServerList(options);
@@ -329,7 +350,7 @@ int MainClient(int argc, char *argv[])
 	// a read thread is launched separately
 	std::thread thread(ReadThread, options);
 
-	std::cout << " Running as client " << options.id <<" \n";
+	std::cout << " Running as client " << options.id << " \n";
 
 	// Start Sending Message (in main thread)
 	int i = 0;
@@ -370,7 +391,7 @@ int MainClient(int argc, char *argv[])
 
 	// Wait for the thread to finish; we stay here until it is done
 	thread.join();
-	
+
 	// cleanup whatever initialized (for windows socket)
 	SocketFactory::Destroy();
 
