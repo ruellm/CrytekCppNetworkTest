@@ -11,7 +11,7 @@
 #include <sstream>
 
 #define MAX_BUFFER_LEN				1024
-#define	FINISHED_TRANSACTION_SECS	5	// time finished transaction map store before deletion (in seconds)
+#define	FINISHED_TRANSACTION_SECS	60	// time finished transaction map store before deletion (in seconds)
 
 CEchoDistributedServer::CEchoDistributedServer(const SConfig& config) 
 	: m_config(config), m_msgId(0)
