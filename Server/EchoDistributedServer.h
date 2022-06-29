@@ -5,6 +5,9 @@
 #include "Common/ISocketBase.h"
 #include "Common/Packet.h"
 
+#include <chrono>
+#include<unordered_set>
+
 using SocketMapId = std::map<std::string, SocketPtr>;
 
 class CEchoDistributedServer
@@ -16,11 +19,6 @@ public:
 		int port = 0;				// server port
 		int numOfThreads = 100;		// the number of threads in the thread pool
 		bool expand = false;		// will the server expand and create more thread if it runs out
-	};
-
-	struct SConnectionGroup
-	{
-		
 	};
 
 	CEchoDistributedServer(const SConfig& config);
@@ -43,12 +41,16 @@ private:
 	bool IsPeer(const std::string& id);
 	PacketPtr ValidateIdentity(SocketPtr& ptr);
 	bool BasicHandShake(const std::string& id);
+	void CleanUpTransaction();
 
 private:
+	
+	using FinishedTransactionMap = std::map<std::string, std::chrono::steady_clock::time_point>;
+	FinishedTransactionMap m_finishedTransactions;
+	
 	CThreadPool m_pool;
-	SConnectionGroup m_group[3];
 	const SConfig& m_config;
 	std::mutex m_mutex;
 	SocketMapId m_clients;
-
+	std::atomic<int> m_msgId;
 };

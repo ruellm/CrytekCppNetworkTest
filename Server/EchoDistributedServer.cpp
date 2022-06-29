@@ -3,13 +3,18 @@
 #include "Common/PacketBuilder.h"
 #include "Common/PacketIdentity.h"
 #include "Common/PacketSender.h"
+#include "Common/Tokenizer.h"
 
 #include <iostream>
 #include <mutex>
 #include <string.h>
-#define MAX_BUFFER_LEN			1024
+#include <sstream>
 
-CEchoDistributedServer::CEchoDistributedServer(const SConfig& config) : m_config(config)
+#define MAX_BUFFER_LEN				1024
+#define	FINISHED_TRANSACTION_SECS	5	// time finished transaction map store before deletion (in seconds)
+
+CEchoDistributedServer::CEchoDistributedServer(const SConfig& config) 
+	: m_config(config), m_msgId(0)
 {}
 
 CEchoDistributedServer::~CEchoDistributedServer()
@@ -45,6 +50,13 @@ PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 	if (iter != m_clients.end())
 	{
 		std::cout << "[ERROR] ID Already exist denied loggin in " << derived->message << "\n";
+		return nullptr;
+	}
+
+	// check white space on the ID
+	if (derived->message.find(' ') != std::string::npos)
+	{
+		std::cout << "[ERROR] ID contains white space " << derived->message << "\n";
 		return nullptr;
 	}
 
@@ -191,22 +203,55 @@ const std::string CEchoDistributedServer::GetSocketId(const SocketPtr& socket)
 	return {};
 }
 
+void CEchoDistributedServer::CleanUpTransaction()
+{
+	std::cout << "[INFO] Running cleanup transaction cache \n";
+
+	FinishedTransactionMap::iterator it = m_finishedTransactions.begin();
+	while (it != m_finishedTransactions.end())
+	{
+		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - it->second).count();
+
+		if (duration > FINISHED_TRANSACTION_SECS)
+			it = m_finishedTransactions.erase(it);
+		else
+			it++;
+	}
+}
+
 void CEchoDistributedServer::BroadCastMessage(char* buffer, size_t len,
 	const std::string& origin, const std::string& sender)
 {
 	SocketMapId::iterator it = m_clients.begin();
 
+	Tokens tokens;
+	Tokenizer::Tokenize(origin, " ", tokens);
+
+	if (!IsPeer(tokens[0]))
+	{
+		if (m_finishedTransactions.find(origin) != m_finishedTransactions.end())
+			return; //Data already processed in this server exiting;
+
+		m_finishedTransactions[origin] = std::chrono::steady_clock::now();
+		
+		m_pool.QueueTask([this]() mutable
+		{
+			CleanUpTransaction();
+		});
+	}
+
 	while (it != m_clients.end())
 	{
 		auto socket = it->second;
-		m_pool.QueueTask([socket, buffer, len, origin, sender, this]() mutable 
+		m_pool.QueueTask([socket, buffer, len, origin, sender, tokens, this]() mutable 
 		{
 			// if receiver is a peer, set sender using new id?
 			auto id = GetSocketId(socket);
 
 			// Do not send packet to sender or to originator node
 			// unless its a client node for echo
-			if (id.compare(origin) == 0 ||
+			if (id.compare(tokens[0]) == 0 ||
 				(id.compare(sender) == 0 && IsPeer(sender)))
 				return;
 
@@ -259,8 +304,14 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 
 		if (original)
 		{
+			std::stringstream ss;
+			std::string transactionId;
+
+			ss << m_msgId++;
+			ss >> transactionId;
+
 			// set originator node
-			packet->from = m_config.id;
+			packet->from = m_config.id + " " + transactionId;
 			size_t retSize = 0;
 			auto buf = packet->Serialize(&retSize);
 

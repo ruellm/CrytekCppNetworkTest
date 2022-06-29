@@ -281,8 +281,12 @@ void LoginIdentity(const std::string& id)
 {
 	if (id.size() == 0)
 	{
-		std::cout << "[ERROR] Client ID is required \n";
-		exit(1);
+		ExitWithError("[ERROR] Client ID is required ");
+	}
+
+	if (id.find(' ') != std::string::npos)
+	{
+		ExitWithError("[ERROR] ID contains white space " + id);
 	}
 
 	SPacketIdentiy identity(id);

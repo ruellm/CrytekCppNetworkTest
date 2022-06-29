@@ -60,6 +60,9 @@
     <ClCompile Include="..\Common\PacketSender.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Tokenizer.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ISocketBase.h">
@@ -73,9 +76,6 @@
     </ClInclude>
     <ClInclude Include="Config\PeersConfigLoader.h">
       <Filter>Config</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadPool.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EchoDistributedServer.h">
       <Filter>Header Files</Filter>
@@ -96,6 +96,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\PacketSender.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Tokenizer.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

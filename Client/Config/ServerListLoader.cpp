@@ -1,9 +1,10 @@
 #include "ServerListLoader.h"
+#include "Common/Tokenizer.h"
 
 void CServerListLoader::Process(const std::string& line)
 {
 	Tokens tokens;
-	Tokenize(line, " ", tokens);
+	Tokenizer::Tokenize(line, " ", tokens);
 
 	if (tokens.size() != 2)
 		return;

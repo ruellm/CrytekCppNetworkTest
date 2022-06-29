@@ -1,9 +1,10 @@
 #include "PeersConfigLoader.h"
+#include "Common/Tokenizer.h"
 
 void CPeersConfigLoader::Process(const std::string& line)
 {
 	Tokens tokens;
-	Tokenize(line, " ", tokens);
+	Tokenizer::Tokenize(line, " ", tokens);
 
 	if (tokens.size() != 3)
 		return;

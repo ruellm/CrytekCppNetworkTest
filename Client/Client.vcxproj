@@ -163,6 +163,7 @@
     <ClCompile Include="..\Common\PacketSender.cpp" />
     <ClCompile Include="..\Common\PacketStringMessage.cpp" />
     <ClCompile Include="..\Common\SocketFactory.cpp" />
+    <ClCompile Include="..\Common\Tokenizer.cpp" />
     <ClCompile Include="..\Common\WindowsSocket.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="Config\ServerListLoader.cpp" />
