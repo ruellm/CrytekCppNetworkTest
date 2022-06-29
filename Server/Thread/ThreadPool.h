@@ -66,10 +66,10 @@ private:
 	int m_maxThreads;
 	std::condition_variable m_condVariable;
 	std::mutex m_mutex;
-	std::mutex m_threadMutex;
 	std::queue<ThreadPoolTask> m_queue;
 	ThreadMap m_threads;
 	std::vector<int> m_finished;
+	std::mutex m_finishedMutex;
 	SAtomicCounter m_counter;	// counter for busy thread
 	
 	int m_lastId;

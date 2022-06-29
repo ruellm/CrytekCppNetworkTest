@@ -206,6 +206,7 @@ const std::string CEchoDistributedServer::GetSocketId(const SocketPtr& socket)
 void CEchoDistributedServer::CleanUpTransaction()
 {
 	std::cout << "[INFO] Running cleanup transaction cache \n";
+	std::lock_guard<std::mutex> lock(m_finishedMutex);
 
 	FinishedTransactionMap::iterator it = m_finishedTransactions.begin();
 	while (it != m_finishedTransactions.end())
@@ -233,8 +234,11 @@ void CEchoDistributedServer::BroadCastMessage(char* buffer, size_t len,
 		if (m_finishedTransactions.find(origin) != m_finishedTransactions.end())
 			return; //Data already processed in this server exiting;
 
-		m_finishedTransactions[origin] = std::chrono::steady_clock::now();
-		
+		{
+			std::lock_guard<std::mutex> lock(m_finishedMutex);
+			m_finishedTransactions[origin] = std::chrono::steady_clock::now();
+		}
+
 		m_pool.QueueTask([this]() mutable
 		{
 			CleanUpTransaction();

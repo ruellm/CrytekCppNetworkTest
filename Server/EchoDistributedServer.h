@@ -47,7 +47,8 @@ private:
 	
 	using FinishedTransactionMap = std::map<std::string, std::chrono::steady_clock::time_point>;
 	FinishedTransactionMap m_finishedTransactions;
-	
+	std::mutex m_finishedMutex;
+
 	CThreadPool m_pool;
 	const SConfig& m_config;
 	std::mutex m_mutex;

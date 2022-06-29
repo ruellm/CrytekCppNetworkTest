@@ -28,6 +28,7 @@ void CThreadPool::QueueTask(ThreadPoolTask t)
 
 	if (m_expand && m_counter.Get() >= m_maxThreads)
 	{
+		
 		// check for finished thread and delete them before spawning new one
 		for (int i = 0; i < m_finished.size(); i++)
 		{
@@ -43,6 +44,8 @@ void CThreadPool::QueueTask(ThreadPoolTask t)
 		int id = ++m_lastId;
 		std::cout << "[INFO] Allocating new thread with id " << id << "\n";
 		m_threads[id] = new std::thread(ProcessTask, this, id);
+
+		std::lock_guard<std::mutex> lock(m_finishedMutex);
 		m_finished.clear();
 	}
 
@@ -126,6 +129,7 @@ bool CThreadPool::Execute()
 
 void CThreadPool::Mark(int index)
 {
+	std::lock_guard<std::mutex> lock(m_finishedMutex);
 	m_finished.push_back(index);
 }
 
