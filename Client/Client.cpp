@@ -29,6 +29,8 @@
 #pragma comment (lib, "AdvApi32.lib")
 #endif
 
+#define  MAX_BUFFER_LEN			1024
+
 // Options for client operations
 struct SClientOptions
 {
@@ -124,11 +126,11 @@ void ProcessPacket(PacketPtr packet)
 	switch (packet->header.type)
 	{
 	case PacketType::StringMessage:
-	{
-		SPacketStringMessage* derived = dynamic_cast<SPacketStringMessage*>(packet.get());
-		std::cout << "String message received: " << derived->message << " \n" << std::endl;
-		break;
-	}
+		{
+			SPacketStringMessage* derived = dynamic_cast<SPacketStringMessage*>(packet.get());
+			std::cout << "String message received: " << derived->message << " \n" << std::endl;
+			break;
+		}
 	}
 }
 
@@ -150,7 +152,6 @@ bool Reconnect(const SClientOptions& options)
 
 void ReadThread(const SClientOptions& options)
 {
-	const int MAX_BUFFER_LEN = 2000;
 	char buffer[MAX_BUFFER_LEN];
 
 	while (true)
@@ -301,7 +302,6 @@ void LoginIdentity(const std::string& id)
 
 	PacketSender::Send(&identity, g_socket);
 
-	const int MAX_BUFFER_LEN = 2000;
 	char buffer[MAX_BUFFER_LEN];
 
 	int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
@@ -316,6 +316,7 @@ void LoginIdentity(const std::string& id)
 	if (derived->message != id)
 		ExitWithError("[ERROR] Error in Identity Confirmation");
 
+	// cache the ID to be used when reconnecting
 	g_id = id;
 }
 

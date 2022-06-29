@@ -11,7 +11,8 @@ namespace Tokenizer
 		// Find first "non-delimiter".
 		string::size_type pos = str.find_first_of(delimiters, lastPos);
 
-		if (string::npos == pos) {
+		if (string::npos == pos) 
+		{
 			//no delimeter found insert the string and return
 			tokens.push_back(str.substr(0, str.length()));
 			return;

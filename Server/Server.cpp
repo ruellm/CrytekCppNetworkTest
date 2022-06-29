@@ -39,7 +39,8 @@ void VerifyServerConfig(const CEchoDistributedServer::SConfig& config)
 
 void VerifyPeersConfig(const PeersList& config)
 {
-	for (auto & c : config) {
+	for (auto & c : config) 
+	{
 		if (c.id.size() == 0)
 			ExitWithError("Peer id is empty");
 		else if (c.id.size() == 0)

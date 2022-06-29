@@ -38,6 +38,7 @@ bool CPosixSocket::CreateAsServer(int port)
 		perror("bind failed");
 		exit(EXIT_FAILURE);
 	}
+	
 	if (listen(m_handle, 3) < 0)
 	{
 		perror("listen");
@@ -53,7 +54,8 @@ std::shared_ptr<ISocketBase> CPosixSocket::Accept()
 	int addrlen = sizeof(m_address);
 
 	if ((newSocket = accept(m_handle, (struct sockaddr*)&m_address,
-						  (socklen_t*)&addrlen)) < 0) {
+						(socklen_t*)&addrlen)) < 0) 
+	{
 		std::cout << "[ERROR] Accept Failed \n";
 		return nullptr;
 	}
@@ -67,13 +69,15 @@ bool CPosixSocket::Connect(const std::string& address, int port)
 	struct hostent *server;
 
 	m_handle = socket(AF_INET, SOCK_STREAM, 0);
-	if (m_handle < 0) {
+	if (m_handle < 0) 
+	{
 		std::cout <<  "[ERROR] unable to create socket object \n";
 		return false;
 	}
 
 	server = gethostbyname(address.c_str());
-	if (server == NULL) {
+	if (server == NULL) 
+	{
 		std::cout <<  "[ERROR] No such host \n";
 		return false;
 	}
@@ -84,7 +88,8 @@ bool CPosixSocket::Connect(const std::string& address, int port)
 	serv_addr.sin_port = htons(port);
 
 	// Send a connection request to the server
-	if (connect(m_handle, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+	if (connect(m_handle, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
+	{
 		std::cout <<  "[ERROR] unable to create socket object \n";
 		return false;
 	}
@@ -93,7 +98,8 @@ bool CPosixSocket::Connect(const std::string& address, int port)
 }
 void CPosixSocket::Disconnect()
 {
-	if(m_handle){
+	if(m_handle)
+	{
 		close(m_handle);
 	}
 }

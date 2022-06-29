@@ -44,7 +44,8 @@ bool CWindowsSocket::CreateAsServer(int port)
 	// Resolve the server address and port
 	std::string PORT = std::to_string(port);
 	int result = getaddrinfo(NULL, PORT.c_str(), &hints, &addrInfo);
-	if (result != 0) {
+	if (result != 0) 
+	{
 		printf("getaddrinfo failed with error: %d\n", result);
 		WSACleanup();
 		return false;
@@ -52,7 +53,8 @@ bool CWindowsSocket::CreateAsServer(int port)
 
 	// Create a SOCKET for connecting to server
 	m_handle = socket(addrInfo->ai_family, addrInfo->ai_socktype, addrInfo->ai_protocol);
-	if (m_handle == INVALID_SOCKET) {
+	if (m_handle == INVALID_SOCKET) 
+	{
 		printf("socket failed with error: %ld\n", WSAGetLastError());
 		freeaddrinfo(addrInfo);
 		WSACleanup();
@@ -61,7 +63,8 @@ bool CWindowsSocket::CreateAsServer(int port)
 
 	// Setup the TCP listening socket
 	result = bind(m_handle, addrInfo->ai_addr, (int)addrInfo->ai_addrlen);
-	if (result == SOCKET_ERROR) {
+	if (result == SOCKET_ERROR) 
+	{
 		printf("bind failed with error: %d\n", WSAGetLastError());
 		freeaddrinfo(addrInfo);
 		closesocket(m_handle);
@@ -70,7 +73,8 @@ bool CWindowsSocket::CreateAsServer(int port)
 	}
 
 	result = listen(m_handle, SOMAXCONN);
-	if (result == SOCKET_ERROR) {
+	if (result == SOCKET_ERROR) 
+	{
 		printf("listen failed with error: %d\n", WSAGetLastError());
 		closesocket(m_handle);
 		WSACleanup();
@@ -86,7 +90,8 @@ std::shared_ptr<ISocketBase> CWindowsSocket::Accept()
 {
 	// Accept a client socket
 	SOCKET clientFd = accept(m_handle, NULL, NULL);
-	if (clientFd == INVALID_SOCKET) {
+	if (clientFd == INVALID_SOCKET) 
+	{
 		printf("accept failed with error: %d\n", WSAGetLastError());
 		WSACleanup();
 		return nullptr;
@@ -107,19 +112,21 @@ bool CWindowsSocket::Connect(const std::string& address, int port)
 	// Resolve the server address and port
 	std::string PORT = std::to_string(port);
 	int res = getaddrinfo(address.c_str(), PORT.c_str(), &hints, &result);
-	if (res != 0) {
+	if (res != 0) 
+	{
 		printf("getaddrinfo failed with error: %d\n", res);
 		WSACleanup();
 		return false;
 	}
 
 	// Attempt to connect to an address until one succeeds
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
-
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) 
+	{
 		// Create a SOCKET for connecting to server
 		m_handle = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 
-		if (m_handle == INVALID_SOCKET) {
+		if (m_handle == INVALID_SOCKET) 
+		{
 			printf("socket failed with error: %ld\n", WSAGetLastError());
 			WSACleanup();
 			return false;
@@ -127,7 +134,8 @@ bool CWindowsSocket::Connect(const std::string& address, int port)
 
 		// Connect to server.
 		res = connect(m_handle, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (res == SOCKET_ERROR) {
+		if (res == SOCKET_ERROR) 
+		{
 			closesocket(m_handle);
 			m_handle = INVALID_SOCKET;
 			continue;
@@ -153,9 +161,8 @@ int CWindowsSocket::Read(void* ptr, int size)
 	int result = recv(m_handle, (char*)ptr, size, 0);
 	if (result == 0)
 		printf("Connection closed\n");
-	else if (result < 0) {
+	else if (result < 0)
 		printf("recv failed with error: %d\n", WSAGetLastError());
-	}
 
 	return result;
 }
@@ -164,7 +171,8 @@ int CWindowsSocket::Write(void* ptr, int size)
 {
 	// Send an initial buffer
 	int result = send(m_handle, (const char*)ptr, size, 0);
-	if (result == SOCKET_ERROR) {
+	if (result == SOCKET_ERROR) 
+	{
 		printf("send failed with error: %d\n", WSAGetLastError());
 		closesocket(m_handle);
 	}

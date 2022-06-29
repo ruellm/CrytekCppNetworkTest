@@ -65,11 +65,13 @@ PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 
 void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& socket)
 {
+	// Run and listen from peers socket
 	m_pool.QueueTask([socket, this]() mutable 
 	{
 		RunSockets(socket, true);
 	});
 
+	// connects to each peers
 	m_pool.QueueTask([peers, this]() mutable 
 	{
 		for (auto p : peers)
