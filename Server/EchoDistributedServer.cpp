@@ -276,8 +276,6 @@ bool CEchoDistributedServer::IsPeer(const std::string& id)
 
 void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 {
-	char buffer[MAX_BUFFER_LEN];
-
 	while (true)
 	{
 		if (!socket)

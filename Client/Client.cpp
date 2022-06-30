@@ -151,8 +151,6 @@ bool Reconnect(const SClientOptions& options)
 
 void ReadThread(const SClientOptions& options)
 {
-	char buffer[MAX_BUFFER_LEN];
-
 	while (true)
 	{
 		if (g_done)
