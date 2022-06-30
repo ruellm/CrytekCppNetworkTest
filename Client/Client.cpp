@@ -10,6 +10,7 @@
 #include "Config/ServerListLoader.h"
 #include "Common/PacketIdentity.h"
 #include "Common/PacketSender.h"
+#include "Common/PacketReceiver.h"
 
 #ifdef RUN_TEST
 #include "Test/Test.h"
@@ -156,13 +157,13 @@ void ReadThread(const SClientOptions& options)
 
 	while (true)
 	{
-		int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
-
 		if (g_done)
 			return;
 
+		auto packet = PacketReceiver::Receive(g_socket);
+
 		// socket connection is lost
-		if (len <= 0)
+		if (packet == nullptr)
 		{
 			// Pause this client, disabling writing in main thread
 			g_pause = true;
@@ -189,7 +190,6 @@ void ReadThread(const SClientOptions& options)
 			continue;  // continue thread by reading next data
 		}
 
-		auto packet = PacketBuilder::Build(buffer, len);
 		ProcessPacket(std::move(packet));
 	}
 }

@@ -4,14 +4,15 @@
 #include "Common/PacketIdentity.h"
 #include "Common/PacketSender.h"
 #include "Common/Tokenizer.h"
+#include "Common/PacketReceiver.h"
 
 #include <iostream>
 #include <mutex>
 #include <string.h>
 #include <sstream>
 
-#define MAX_BUFFER_LEN				1024
-#define	FINISHED_TRANSACTION_SECS	60	// time finished transaction map store before deletion (in seconds)
+// time finished transaction map store before deletion (in seconds)
+#define	FINISHED_TRANSACTION_SECS	60	
 
 CEchoDistributedServer::CEchoDistributedServer(const SConfig& config) 
 	: m_config(config), m_msgId(0)
@@ -28,16 +29,13 @@ void CEchoDistributedServer::AddClient(SocketPtr& socket, const std::string& id)
 
 PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 {
-	char buffer[MAX_BUFFER_LEN];
-
-	int len = socket->Read(buffer, MAX_BUFFER_LEN);
-	if (len <= 0)
+	auto packet = PacketReceiver::Receive(socket);
+	if (packet == nullptr)
 	{
 		std::cout << "[ERROR] Peer was not able to confirm this server identity \n";
 		return nullptr;
 	}
 
-	auto packet = PacketBuilder::Build(buffer, len);
 	if (packet->header.type != PacketType::Identity)
 	{
 		std::cout << "[ERROR] Expecting Identity response, recieved different \n";
@@ -287,27 +285,19 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 
 		std::cout << "[INFO] Waiting for Message \n" << std::endl;
 
-		int len = socket->Read(buffer, MAX_BUFFER_LEN);
-
-		// client connection is already closed or lost break the loop
-		if (len <= 0)
+		auto packet = PacketReceiver::Receive(socket);
+		if (packet == nullptr)
 		{
 			RemoveFromList(socket);
 			return;
 		}
-
-		std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
 
 		// When a message arrived from a client, that means this is the first time it is being sent
 		// mark the "from" address of the packet to the recieving node to avoid cyclc broadcast
 		auto id = GetSocketId(socket);
 		bool original = !IsPeer(id);
 		std::string source;
-
-		auto packet = PacketBuilder::Build(buffer, len);
-		if (packet == nullptr)
-			return;
-
+		
 		if (original)
 		{
 			std::stringstream ss;
@@ -316,19 +306,19 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 			ss << m_msgId++;
 			ss >> transactionId;
 
-			// set originator node
+			// set originator node and reserialize
 			packet->from = m_config.id + " " + transactionId;
-			size_t retSize = 0;
-			auto buf = packet->Serialize(&retSize);
-
-			memcpy(buffer, buf, retSize);
-			len = (int)retSize;
-
-			delete buf;
 		}
 
-		source = packet->from;
+		size_t len = 0;
+		char buffer[MAX_BUFFER_LEN] = { 0 };
+		auto buf = packet->Serialize(&len);
+		memcpy(buffer, buf, len);
+		delete buf;
 
+		std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
+
+		source = packet->from;
 		BroadCastMessage(buffer, len, source, id);
 	}
 

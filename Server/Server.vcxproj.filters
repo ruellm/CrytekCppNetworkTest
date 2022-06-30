@@ -63,6 +63,9 @@
     <ClCompile Include="..\Common\Tokenizer.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\PacketReceiver.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ISocketBase.h">
@@ -99,6 +102,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Tokenizer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PacketReceiver.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

@@ -160,6 +160,7 @@
     <ClCompile Include="..\Common\ConfigLoader.cpp" />
     <ClCompile Include="..\Common\Packet.cpp" />
     <ClCompile Include="..\Common\PacketBuilder.cpp" />
+    <ClCompile Include="..\Common\PacketReceiver.cpp" />
     <ClCompile Include="..\Common\PacketSender.cpp" />
     <ClCompile Include="..\Common\PacketStringMessage.cpp" />
     <ClCompile Include="..\Common\SocketFactory.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="..\Common\Packet.h" />
     <ClInclude Include="..\Common\PacketBuilder.h" />
     <ClInclude Include="..\Common\PacketIdentity.h" />
+    <ClInclude Include="..\Common\PacketReceiver.h" />
     <ClInclude Include="..\Common\PacketSender.h" />
     <ClInclude Include="..\Common\PacketStringMessage.h" />
     <ClInclude Include="Config\ServerListLoader.h" />
