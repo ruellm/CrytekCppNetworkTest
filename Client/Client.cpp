@@ -30,8 +30,6 @@
 #pragma comment (lib, "AdvApi32.lib")
 #endif
 
-#define  MAX_BUFFER_LEN			1024
-
 // Options for client operations
 struct SClientOptions
 {

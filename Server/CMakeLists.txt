@@ -18,6 +18,7 @@ add_executable(Server
         ../Common/PacketSender.cpp
         ../Common/PacketStringMessage.cpp
         ../Common/Tokenizer.cpp
+	../Common/PacketReceiver.cpp
         )
 
 target_include_directories(Server PUBLIC ../ )
