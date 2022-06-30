@@ -328,7 +328,7 @@ void ValidateOptions(const SClientOptions& options)
 
 int MainClient(int argc, char *argv[])
 {
-	std::cout << "===== Distributed Echo Client v1.0 ==== \n\n";
+	std::cout << "===== Distributed Echo Client v1.1 ==== \n\n";
 
 	// prepare the options
 	auto options = LoadProgramOptions(argc, argv);
