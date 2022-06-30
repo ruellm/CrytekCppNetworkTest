@@ -5,6 +5,7 @@
 #include "Common/PacketSender.h"
 #include "Common/Tokenizer.h"
 #include "Common/PacketReceiver.h"
+#include "Common/PacketSender.h"
 
 #include <iostream>
 #include <mutex>
@@ -221,7 +222,7 @@ void CEchoDistributedServer::CleanUpTransaction()
 	}
 }
 
-void CEchoDistributedServer::BroadCastMessage(char* buffer, size_t len,
+void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet, 
 	const std::string& origin, const std::string& sender)
 {
 	SocketMapId::iterator it = m_clients.begin();
@@ -248,7 +249,7 @@ void CEchoDistributedServer::BroadCastMessage(char* buffer, size_t len,
 	while (it != m_clients.end())
 	{
 		auto socket = it->second;
-		m_pool.QueueTask([socket, buffer, len, origin, sender, tokens, this]() mutable 
+		m_pool.QueueTask([socket, packet, origin, sender, tokens, this]() mutable 
 		{
 			// if receiver is a peer, set sender using new id?
 			auto id = GetSocketId(socket);
@@ -259,7 +260,7 @@ void CEchoDistributedServer::BroadCastMessage(char* buffer, size_t len,
 				(id.compare(sender) == 0 && IsPeer(sender)))
 				return;
 
-			if (!socket->Write((void*)buffer, (int)len))
+			if (!PacketSender::Send(packet.get(), socket))
 			{
 				RemoveFromList(socket);
 			}
@@ -308,16 +309,10 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 			packet->from = m_config.id + " " + transactionId;
 		}
 
-		size_t len = 0;
-		char buffer[MAX_BUFFER_LEN] = { 0 };
-		auto buf = packet->Serialize(&len);
-		memcpy(buffer, buf, len);
-		delete buf;
-
 		std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
 
 		source = packet->from;
-		BroadCastMessage(buffer, len, source, id);
+		BroadCastMessage(packet, source, id);
 	}
 
 }

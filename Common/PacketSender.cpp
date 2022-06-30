@@ -3,7 +3,7 @@
 
 namespace PacketSender
 {
-	void Send(IPacketBase* packet, SocketPtr& socket)
+	bool Send(IPacketBase* packet, SocketPtr& socket)
 	{
 		char* buffer = nullptr;
 		size_t len = 0;
@@ -12,8 +12,9 @@ namespace PacketSender
 		// write the packet
 		int res = socket->Write(buffer, (int)len);
 		if (res <= 0)
-			std::cout << "Unable to send message \n" << std::endl;
-	
+			return false;
+		
 		delete[] buffer;
+		return true;
 	}
 }

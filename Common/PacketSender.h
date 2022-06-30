@@ -5,5 +5,5 @@
 
 namespace PacketSender
 {
-	void Send(IPacketBase* packet, SocketPtr& socket );
+	bool Send(IPacketBase* packet, SocketPtr& socket );
 }

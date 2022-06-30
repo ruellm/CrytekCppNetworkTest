@@ -26,4 +26,4 @@ struct IPacketBase
 	virtual void Deserialized(char* buffer, int len) = 0;
 };
 
-using PacketPtr = std::unique_ptr<IPacketBase>;
+using PacketPtr = std::shared_ptr<IPacketBase>;

@@ -27,8 +27,8 @@ public:
 	void Run( const PeersList& peers);
 
 private:
-	void BroadCastMessage(char* buffer, size_t len, 
-		const std::string& origin, const std::string& sender);
+	void BroadCastMessage(PacketPtr& packet, const std::string& origin, 
+		const std::string& sender);
 	
 	void ConnectToPeers(const PeersList& peers, SocketPtr& socket);
 	void RemoveFromList(const SocketPtr& socket);
