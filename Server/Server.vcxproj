@@ -163,6 +163,7 @@
     <ClCompile Include="..\Common\PacketReceiver.cpp" />
     <ClCompile Include="..\Common\PacketSender.cpp" />
     <ClCompile Include="..\Common\PacketStringMessage.cpp" />
+    <ClCompile Include="..\Common\SocketBase.cpp" />
     <ClCompile Include="..\Common\SocketFactory.cpp" />
     <ClCompile Include="..\Common\Tokenizer.cpp" />
     <ClCompile Include="..\Common\WindowsSocket.cpp" />
@@ -173,10 +174,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ConfigLoader.h" />
-    <ClInclude Include="..\Common\ISocketBase.h" />
     <ClInclude Include="..\Common\PacketIdentity.h" />
     <ClInclude Include="..\Common\PacketReceiver.h" />
     <ClInclude Include="..\Common\PacketSender.h" />
+    <ClInclude Include="..\Common\SocketBase.h" />
     <ClInclude Include="..\Common\SocketFactory.h" />
     <ClInclude Include="..\Common\Tokenizer.h" />
     <ClInclude Include="..\Common\WindowsSocket.h" />

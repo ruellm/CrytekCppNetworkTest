@@ -22,18 +22,39 @@ CEchoDistributedServer::CEchoDistributedServer(const SConfig& config)
 CEchoDistributedServer::~CEchoDistributedServer()
 {}
 
-void CEchoDistributedServer::AddClient(SocketPtr& socket, const std::string& id)
+bool CEchoDistributedServer::ClientExist(const std::string& id)
 {
+	auto iter = m_clients.find(id);
+	return (iter != m_clients.end());
+}
+
+bool CEchoDistributedServer::AddClient(SocketPtr& socket, const std::string& id, bool active)
+{
+	std::string connectionType = active ? "Active" : "Listener";
+
+	if (ClientExist(id))
+	{
+		std::cout << "[WARNING] connection to " << id << " as " << connectionType
+			<< " previously established, dropping connection \n";
+
+		return false;
+	}
+
 	std::lock_guard<std::mutex> lock(m_mutex);
+	std::cout << "[INFO] connection to " << id << " established as "<< connectionType <<"! \n";
 	m_clients[id] = socket;
+	return true;
 }
 
 PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 {
-	auto packet = PacketReceiver::Receive(socket);
+	PacketPtr packet = nullptr;
+	if(PacketReceiver::Wait(socket))
+		packet = PacketReceiver::Receive(socket);
+	
 	if (packet == nullptr)
 	{
-		std::cout << "[ERROR] Peer was not able to confirm this server identity \n";
+		std::cout << "[ERROR] Peer Rejected connection (validation or connection is already active)... \n";
 		return nullptr;
 	}
 
@@ -45,8 +66,7 @@ PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 
 	// check if ID already exist
 	SPacketIdentiy* derived = dynamic_cast<SPacketIdentiy*>(packet.get());
-	auto iter = m_clients.find(derived->message);
-	if (iter != m_clients.end())
+	if (ClientExist(derived->message))
 	{
 		std::cout << "[ERROR] ID Already exist denied loggin in " << derived->message << "\n";
 		return nullptr;
@@ -78,21 +98,20 @@ void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& s
 			if (p.id == m_config.id)
 				continue;
 
-			std::cout << "[INFO] Attempt Connect to Peer " << p.address << " port " << p.port << "...";
-			std::shared_ptr<ISocketBase> socket = SocketFactory::Create();
+			std::cout << "[INFO] Attempt Connect to Peer " << p.address << " port " << p.port << "("<< p.id << ")...";
+			SocketPtr socket = SocketFactory::Create();
 			if (!socket->Connect(p.address.c_str(), p.port)) {
 				std::cout << " Error\n";
 				continue;
 			}
 
-			std::cout << "Success!\n";
-
 			SPacketIdentiy identity(m_config.id);
 			PacketSender::Send(&identity, socket);
 			if (!ValidateIdentity(socket))
-				return;
+				continue;
 
-			AddClient(socket, p.id);
+			if (!AddClient(socket, p.id, true))
+				continue;
 
 			m_pool.QueueTask([socket, this]() mutable 
 			{
@@ -109,7 +128,7 @@ bool CEchoDistributedServer::BasicHandShake(const std::string& id)
 
 void CEchoDistributedServer::ConfirmIdentity(SocketPtr& socket, bool peers)
 {
-	std::cout << "[INFO] Confirming Identity ... ";
+	std::cout << "[INFO] Confirming Identity ... \n";
 	m_pool.QueueTask([socket, peers, this]() mutable 
 	{
 		auto packet = ValidateIdentity(socket);
@@ -125,14 +144,15 @@ void CEchoDistributedServer::ConfirmIdentity(SocketPtr& socket, bool peers)
 			return;
 		}
 
-		AddClient(socket, derived->message);
+		if (!AddClient(socket, derived->message))
+			return;
 
 		// Sends back the packet to confirm
 		PacketSender::Send(packet.get(), socket);
 
 		ProcessClient(socket);
 
-		std::cout << "Confirmed Id " << derived->message << "\n";
+		std::cout << "[INFO] Confirmed Id " << derived->message << "\n";
 	});
 }
 
@@ -140,9 +160,12 @@ void CEchoDistributedServer::RunSockets(SocketPtr& socket, bool peers)
 {
 	while (true)
 	{
-		std::shared_ptr<ISocketBase> clientSocket = socket->Accept();
+		SocketPtr clientSocket = socket->Accept();
 		if (!clientSocket)
 			continue;
+
+		// make it as an unblocking socket
+		clientSocket->UnBlock();
 
 		std::cout << "[INFO] Client socket connected \n" << std::endl;
 		ConfirmIdentity(clientSocket, peers);
@@ -151,13 +174,13 @@ void CEchoDistributedServer::RunSockets(SocketPtr& socket, bool peers)
 
 void CEchoDistributedServer::Run(const PeersList& peers)
 {
-	std::shared_ptr<ISocketBase> socket = SocketFactory::Create();
+	SocketPtr socket = SocketFactory::Create();
 	if (!socket->CreateAsServer(m_config.port)) {
 		std::cout << "[ERROR] Unable to Create Server at port " << m_config.port << "\n";
 		return;
 	}
 
-	std::shared_ptr<ISocketBase> socketPeers = SocketFactory::Create();
+	SocketPtr socketPeers = SocketFactory::Create();
 	if (!socketPeers->CreateAsServer(m_config.port + 1)) {
 		std::cout << "[ERROR] Unable to Create Server at port " << m_config.port + 1 << "\n";
 		return;
@@ -177,16 +200,36 @@ void CEchoDistributedServer::Run(const PeersList& peers)
 
 void CEchoDistributedServer::RemoveFromList(const SocketPtr& socket)
 {
-	SocketMapId::iterator it = m_clients.begin();
-	while (it != m_clients.end())
 	{
-		if (it->second == socket)
+		std::lock_guard<std::mutex> lock(m_mutex);
+		SocketMapId::iterator it = m_clients.begin();
+		while (it != m_clients.end())
 		{
-			m_clients.erase(it->first);
-			break;
-		}
+			if (it->second == socket)
+			{
+				m_clients.erase(it->first);
+				break;
+			}
 
-		it++;
+			it++;
+		}
+	}
+
+	{
+		std::lock_guard<std::mutex> lock(m_mutexCon);
+		std::vector<ConnectionDataPtr>::iterator itc = m_connections.begin();
+		while (itc != m_connections.end())
+		{
+			if ((*itc)->socket == socket)
+			{
+				(*itc)->alive = false;
+
+				m_connections.erase(itc);
+				break;
+			}
+
+			itc++;
+		}
 	}
 }
 
@@ -260,7 +303,15 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 				(id.compare(sender) == 0 && IsPeer(sender)))
 				return;
 
-			if (!PacketSender::Send(packet.get(), socket))
+			// poll until we are ready to write to this socket
+			while (!socket->IsWriteReady())
+			{
+				// delay to prevent CPU hog
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			}
+
+			if (!PacketSender::Wait(socket) ||
+				!PacketSender::Send(packet.get(), socket))
 			{
 				RemoveFromList(socket);
 			}
@@ -277,42 +328,90 @@ bool CEchoDistributedServer::IsPeer(const std::string& id)
 
 void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 {
-	while (true)
+	auto connection = std::make_shared<ConnectionsData>();
+	connection->socket = socket;
+
 	{
-		if (!socket)
-			return;
-
-		std::cout << "[INFO] Waiting for Message \n" << std::endl;
-
-		auto packet = PacketReceiver::Receive(socket);
-		if (packet == nullptr)
-		{
-			RemoveFromList(socket);
-			return;
-		}
-
-		// When a message arrived from a client, that means this is the first time it is being sent
-		// mark the "from" address of the packet to the recieving node to avoid cyclc broadcast
-		auto id = GetSocketId(socket);
-		bool original = !IsPeer(id);
-		std::string source;
-		
-		if (original)
-		{
-			std::stringstream ss;
-			std::string transactionId;
-
-			ss << m_msgId++;
-			ss >> transactionId;
-
-			// set originator node and reserialize
-			packet->from = m_config.id + " " + transactionId;
-		}
-
-		std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
-
-		source = packet->from;
-		BroadCastMessage(packet, source, id);
+		std::lock_guard<std::mutex> lock(m_mutexCon);
+		m_connections.push_back(connection);
 	}
 
+	// launch read thread for this socket
+	m_pool.QueueTask([socket, connection, this]() mutable
+	{
+		while (true)
+		{
+			if (!socket)
+				return;
+
+			std::cout << "[INFO] Waiting for Message \n" << std::endl;
+
+			PacketPtr packet = nullptr;
+			if (PacketReceiver::Wait(socket))
+				packet = PacketReceiver::Receive(socket);
+
+			if (packet == nullptr)
+			{
+				RemoveFromList(socket);
+				return;
+			}
+	
+			{
+				std::unique_lock<std::mutex> lock(connection->mutex);
+				connection->message.push(packet);
+			}
+
+			connection->condVariable.notify_one();
+		}
+	});
+
+	// launch write thread for this socket
+	m_pool.QueueTask([socket, connection, this]() mutable
+	{
+		while (connection->alive)
+		{
+			if (!socket)
+				return;
+
+			PacketPtr packet = nullptr;
+			{
+				std::unique_lock<std::mutex> lock(connection->mutex);
+				connection->condVariable.wait(lock, [connection, this] {
+					return !connection->message.empty();
+				});
+
+				if (!connection->message.empty())
+				{
+					packet = connection->message.front();
+					connection->message.pop();
+				}
+			}
+			
+			if (packet == nullptr)
+				continue;
+
+			// When a message arrived from a client, that means this is the first time it is being sent
+			// mark the "from" address of the packet to the recieving node to avoid cyclc broadcast
+			auto id = GetSocketId(socket);
+			bool original = !IsPeer(id);
+			std::string source;
+
+			if (original)
+			{
+				std::stringstream ss;
+				std::string transactionId;
+
+				ss << m_msgId++;
+				ss >> transactionId;
+
+				// set originator node and reserialize
+				packet->from = m_config.id + " " + transactionId;
+			}
+
+			std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
+
+			source = packet->from;
+			BroadCastMessage(packet, source, id);
+		}
+	});
 }

@@ -48,7 +48,7 @@ bool CPosixSocket::CreateAsServer(int port)
 	return true;
 }
 
-std::shared_ptr<ISocketBase> CPosixSocket::Accept()
+SocketPtr CPosixSocket::Accept()
 {
 	int newSocket = -1;
 	int addrlen = sizeof(m_address);

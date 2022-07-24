@@ -86,7 +86,7 @@ bool CWindowsSocket::CreateAsServer(int port)
 	return true;
 }
 
-std::shared_ptr<ISocketBase> CWindowsSocket::Accept()
+SocketPtr CWindowsSocket::Accept()
 {
 	// Accept a client socket
 	SOCKET clientFd = accept(m_handle, NULL, NULL);

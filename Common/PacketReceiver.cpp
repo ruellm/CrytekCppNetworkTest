@@ -1,6 +1,8 @@
 #include "PacketReceiver.h"
+#include "Packet.h"
 #include "Common/PacketBuilder.h"
 #include <cstring>
+#include <thread>
 
 namespace PacketReceiver
 {
@@ -36,5 +38,20 @@ namespace PacketReceiver
 		delete buffer;
 
 		return std::move(packet);
+	}
+
+	bool Wait(SocketPtr& socket)
+	{
+		int attempt = 0;
+		while (!socket->IsReadReady())
+		{
+			// delay to prevent CPU hog
+			std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_THREAD_DELAY));
+			
+			if (++attempt >= WAIT_MAX_RETRY)
+				return false;
+		}
+
+		return true;
 	}
 }

@@ -94,7 +94,7 @@ SServerOptions LoadProgramOptions(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	std::cout << "===== Distributed Echo Server v1.1 ==== \n\n";
+	std::cout << "===== Distributed Echo Server v2.0 ==== \n\n";
 
 	auto options = LoadProgramOptions(argc, argv);
 

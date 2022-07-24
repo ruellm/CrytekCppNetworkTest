@@ -1,5 +1,8 @@
 #include "PacketSender.h"
+#include "Packet.h"
+
 #include <iostream>
+#include <thread>
 
 namespace PacketSender
 {
@@ -15,6 +18,21 @@ namespace PacketSender
 			return false;
 		
 		delete[] buffer;
+		return true;
+	}
+
+	bool Wait(SocketPtr& socket)
+	{
+		int attempt = 0;
+		while (!socket->IsWriteReady())
+		{
+			// delay to prevent CPU hog
+			std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_THREAD_DELAY));
+
+			if (++attempt >= WAIT_MAX_RETRY)
+				return false;
+		}
+
 		return true;
 	}
 }

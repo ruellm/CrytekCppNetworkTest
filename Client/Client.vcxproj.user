@@ -5,7 +5,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>--id client_1 --host localhost --port 9000 --frequency -1 --delay 1 --message "Hello from client 1"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--id client_1 --host localhost --port 9000 --frequency 1 --delay 1 --message "Hello from client 1"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

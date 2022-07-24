@@ -3,6 +3,9 @@
 #include <string>
 #include <memory>
 
+#define WAIT_THREAD_DELAY 5								/// 5 milliseconds  
+#define WAIT_MAX_RETRY	((120*1000)/WAIT_THREAD_DELAY)  /// 2 minute timeout wait for socket to be available for read/write in milliseconds
+
 enum class PacketType : int
 {
 	StringMessage,

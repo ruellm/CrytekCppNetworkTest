@@ -2,7 +2,7 @@
 
 #include "Thread/ThreadPool.h"
 #include "Config/PeersConfig.h"
-#include "Common/ISocketBase.h"
+#include "Common/SocketBase.h"
 #include "Common/Packet.h"
 
 #include <chrono>
@@ -20,6 +20,15 @@ public:
 		int numOfThreads = 100;		// the number of threads in the thread pool
 		bool expand = false;		// will the server expand and create more thread if it runs out
 	};
+	
+	struct ConnectionsData
+	{
+		SocketPtr socket;
+		std::queue<PacketPtr> message;
+		std::condition_variable condVariable;
+		std::mutex mutex;
+		bool alive = true;
+	};
 
 	CEchoDistributedServer(const SConfig& config);
 	~CEchoDistributedServer();
@@ -34,7 +43,9 @@ private:
 	void RemoveFromList(const SocketPtr& socket);
 	void ProcessClient(SocketPtr& socket);
 
-	void AddClient(SocketPtr& socket, const std::string& id);
+	bool AddClient(SocketPtr& socket, const std::string& id, bool active = false);
+	bool ClientExist(const std::string& id);
+
 	void ConfirmIdentity(SocketPtr& socket, bool peers);
 	const std::string GetSocketId(const SocketPtr& socket);
 	void RunSockets(SocketPtr& socket, bool peers);
@@ -52,6 +63,11 @@ private:
 	CThreadPool m_pool;
 	const SConfig& m_config;
 	std::mutex m_mutex;
+	std::mutex m_mutexCon;
 	SocketMapId m_clients;
 	std::atomic<int> m_msgId;
+
+	using ConnectionDataPtr = std::shared_ptr<ConnectionsData>;
+	std::vector<ConnectionDataPtr> m_connections;
+
 };

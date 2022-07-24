@@ -23,6 +23,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <sstream>
 
 #ifdef WIN32
 #pragma comment (lib, "Ws2_32.lib")
@@ -44,6 +45,7 @@ struct SClientOptions
 
 	int	reconnectRetry = 3;
 	int reconnectDelay = 5;
+	bool listenerOnly = false;
 };
 
 // Global definitions for client
@@ -82,6 +84,7 @@ void Help()
 	std::cout
 		<< "Usage Client [OPTIONS]\n"
 		<< "Options:\n\n"
+		<< "    -l,--listener run as listener (overrule other parameters; frequency, delay and message) \n"
 		<< "    -h,--help  Display Help\n"
 		<< "    -i, --id <string> Client identity in the network (REQUIRED). \n"
 		<< "    --frequency <number> number of times this client will send the message, (-1) sends forever, (default is 1). \n"
@@ -110,6 +113,8 @@ void AttemptConnect()
 
 		if (g_socket->Connect(server.host, server.port)) {
 			std::cout << "... Connected! \n" << std::endl;
+			g_socket->UnBlock();
+
 			g_host = server.host;
 			g_port = server.port;
 			return;
@@ -149,6 +154,33 @@ bool Reconnect(const SClientOptions& options)
 	return false;
 }
 
+bool OnDisconnect(const SClientOptions& options)
+{
+	// Pause this client, disabling writing in main thread
+	g_pause = true;
+
+	if (!Reconnect(options))
+	{
+		// force unpause waiting condition and end any waiting thread
+		g_pause = false;
+		g_done = true;
+
+		std::cout << "Reconnect fail, Exiting ...\n" << std::endl;
+		return false;
+	}
+
+	// re login
+	LoginIdentity(g_id);
+
+	// Reconnect happen unpause writing thread
+	std::cout << "Connect success, Resuming operation ...\n" << std::endl;
+	std::unique_lock<std::mutex> lock(g_mutex);
+	g_condition.notify_one();
+	g_pause = false;
+
+	return true;
+}
+
 void ReadThread(const SClientOptions& options)
 {
 	while (true)
@@ -156,34 +188,17 @@ void ReadThread(const SClientOptions& options)
 		if (g_done)
 			return;
 
-		auto packet = PacketReceiver::Receive(g_socket);
+		// poll until there is enough data in the socket
+		PacketPtr packet = nullptr;
+
+		if(PacketReceiver::Wait(g_socket))
+			packet = PacketReceiver::Receive(g_socket);
 
 		// socket connection is lost
 		if (packet == nullptr)
 		{
-			// Pause this client, disabling writing in main thread
-			g_pause = true;
-
-			if (!Reconnect(options))
-			{
-				// force unpause waiting condition and end any waiting thread
-				g_pause = false;
-				g_done = true;
-
-				std::cout << "Reconnect fail, Exiting ...\n" << std::endl;
-				return;
-			}
-
-			// re login
-			LoginIdentity(g_id);
-
-			// Reconnect happen unpause writing thread
-			std::cout << "Connect success, Resuming operation ...\n" << std::endl;
-			std::unique_lock<std::mutex> lock(g_mutex);
-			g_condition.notify_one();
-			g_pause = false;
-
-			continue;  // continue thread by reading next data
+			if(OnDisconnect(options))
+				continue;  // continue thread by reading next data
 		}
 
 		ProcessPacket(std::move(packet));
@@ -238,6 +253,10 @@ SClientOptions LoadProgramOptions(int argc, char *argv[])
 		else if (arg == "--reconnect-delay" && i + 1 < argc)
 		{
 			config.reconnectDelay = std::stoi(argv[++i]);
+		}
+		else if (arg == "-l" || arg == "--listener")
+		{
+			config.listenerOnly = true;
 		}
 	}
 
@@ -300,7 +319,10 @@ void LoginIdentity(const std::string& id)
 
 	char buffer[MAX_BUFFER_LEN];
 
-	int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
+	int len = 0;
+	if (PacketReceiver::Wait(g_socket))
+		len = g_socket->Read(buffer, MAX_BUFFER_LEN);
+
 	if (len <= 0)
 		ExitWithError("[ERROR] Server Error in confirming Identity ");
 
@@ -318,15 +340,15 @@ void LoginIdentity(const std::string& id)
 
 void ValidateOptions(const SClientOptions& options)
 {
-	if (options.sendDelay == 0)
-		ExitWithError("[ERROR] Send Delay should not be 0");
+	//if (options.sendDelay == 0)
+	//	ExitWithError("[ERROR] Send Delay should not be 0");
 	if (options.reconnectDelay == 0)
 		ExitWithError("[ERROR] Reconnect Delay should not be 0");
 }
 
 int MainClient(int argc, char *argv[])
 {
-	std::cout << "===== Distributed Echo Client v1.1 ==== \n\n";
+	std::cout << "===== Distributed Echo Client v2.0 ==== \n\n";
 
 	// prepare the options
 	auto options = LoadProgramOptions(argc, argv);
@@ -347,7 +369,8 @@ int MainClient(int argc, char *argv[])
 	// a read thread is launched separately
 	std::thread thread(ReadThread, options);
 
-	std::cout << " Running as client " << options.id << " \n";
+	std::cout << " Running Client ID " << options.id 
+		<< (options.listenerOnly? " as LISTENER " : "") <<" \n";
 
 	// Start Sending Message (in main thread)
 	int i = 0;
@@ -368,13 +391,32 @@ int MainClient(int argc, char *argv[])
 		if (g_done)
 			break;
 
-		std::cout << "Sending (" << i++ << ") with message: " << options.message << "\n" << std::endl;
-		SendStringMessage(options.message);
-
-		if (options.frequency != -1)
+		// wait until its ok to write to socket
+		if (!PacketSender::Wait(g_socket))
 		{
-			if (i >= options.frequency)
+			if (!OnDisconnect(options))
 				break;
+		}
+
+		if (!options.listenerOnly)
+		{
+			std::stringstream ss;
+			std::string msgID;
+
+			ss << i++;
+			ss >> msgID;
+
+			std::string nmsg = options.message + " (" + msgID + ")";
+
+			std::cout << "Sending message: " << nmsg << "\n" << std::endl;
+
+			SendStringMessage(nmsg);
+
+			if (options.frequency != -1)
+			{
+				if (i >= options.frequency)
+					break;
+			}
 		}
 
 		std::this_thread::sleep_for(std::chrono::seconds(options.sendDelay));

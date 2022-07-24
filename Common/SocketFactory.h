@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ISocketBase.h"
+#include "SocketBase.h"
 #include <memory>
 
 namespace SocketFactory
 {
-	std::shared_ptr<ISocketBase> Create();
+	std::shared_ptr<SocketBase> Create();
 	void Destroy();
 }

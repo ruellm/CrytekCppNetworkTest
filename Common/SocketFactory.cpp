@@ -7,7 +7,7 @@
 
 namespace SocketFactory
 {
-	std::shared_ptr<ISocketBase> Create()
+	std::shared_ptr<SocketBase> Create()
 	{
 #ifdef WIN32
 		CWindowsSocket::Initialize();
