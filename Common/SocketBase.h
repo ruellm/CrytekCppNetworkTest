@@ -21,8 +21,8 @@ public:
 	virtual int Read(void* ptr, int size) = 0;
 	virtual int Write(void* ptr, int size) = 0;
 
-	bool IsReadReady();
-	bool IsWriteReady();
+	bool IsReadReady(bool* terminate);
+	bool IsWriteReady(bool* terminate);
 	void UnBlock();
 
 	inline void SetHandle(SOCKET_FD handle) {

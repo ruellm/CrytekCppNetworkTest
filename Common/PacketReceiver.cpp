@@ -43,8 +43,12 @@ namespace PacketReceiver
 	bool Wait(SocketPtr& socket)
 	{
 		int attempt = 0;
-		while (!socket->IsReadReady())
+		bool terminate = false;
+		while (!socket->IsReadReady(&terminate))
 		{
+			if (terminate)
+				return false;
+
 			// delay to prevent CPU hog
 			std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_THREAD_DELAY));
 			

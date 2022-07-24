@@ -24,8 +24,13 @@ namespace PacketSender
 	bool Wait(SocketPtr& socket)
 	{
 		int attempt = 0;
-		while (!socket->IsWriteReady())
+		bool terminate = false;
+
+		while (!socket->IsWriteReady(&terminate))
 		{
+			if (terminate)
+				return false;
+
 			// delay to prevent CPU hog
 			std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_THREAD_DELAY));
 

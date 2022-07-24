@@ -14,7 +14,7 @@
 #define SOCKET_ERROR -1
 #endif
 
-bool SocketBase::IsReadReady()
+bool SocketBase::IsReadReady(bool* terminate)
 {
 	fd_set readSet;
 	FD_ZERO(&readSet);
@@ -32,7 +32,17 @@ bool SocketBase::IsReadReady()
 
 	if ((select(maxsock, &readSet, NULL, NULL, &tv)) == SOCKET_ERROR)
 	{
-		printf("select() returned with error %d\n", GETSOCKETERRNO());
+		auto error = GETSOCKETERRNO();
+
+#ifdef WIN32
+		if (error == WSAENOTSOCK)
+			*terminate = true;
+#else
+		if (error == ENOTSOCK)
+			*terminate = true;
+#endif
+
+		printf("select() returned with error %d\n", error);
 		return false;
 	}
 
@@ -45,7 +55,7 @@ bool SocketBase::IsReadReady()
 	return true;
 }
 
-bool SocketBase::IsWriteReady()
+bool SocketBase::IsWriteReady(bool* terminate)
 {
 	fd_set writeSet;
 
@@ -64,7 +74,16 @@ bool SocketBase::IsWriteReady()
 
 	if ((select(maxsock, NULL, &writeSet, NULL, &tv)) == SOCKET_ERROR)
 	{
-		printf("select() returned with error %d\n", GETSOCKETERRNO());
+		auto error = GETSOCKETERRNO();
+
+#ifdef WIN32
+		if (error == WSAENOTSOCK)
+			*terminate = true;
+#else
+		if (error == ENOTSOCK)
+			*terminate = true;
+#endif
+		printf("select() returned with error %d\n", error);
 		return false;
 	}
 
