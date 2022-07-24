@@ -26,7 +26,7 @@ bool SocketBase::IsReadReady()
 	tv.tv_sec = 120;
 	tv.tv_usec = 0;
 
-#ifndef Win32
+#ifndef WIN32
 	maxsock = m_handle+1;
 #endif
 
@@ -58,7 +58,7 @@ bool SocketBase::IsWriteReady()
 	tv.tv_sec = 120;
 	tv.tv_usec = 0;
 
-#ifndef Win32
+#ifndef WIN32
 	maxsock = m_handle+1;
 #endif
 
@@ -80,7 +80,7 @@ bool SocketBase::IsWriteReady()
 void SocketBase::UnBlock()
 {
 	u_long mode = 1;  // 1 to enable non-blocking socket
-#ifdef Win32
+#ifdef WIN32
 	ioctlsocket(m_handle, FIONBIO, &mode);
 #else
 	ioctl(m_handle, FIONBIO, &mode);
