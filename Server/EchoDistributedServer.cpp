@@ -268,8 +268,6 @@ void CEchoDistributedServer::CleanUpTransaction()
 void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet, 
 	const std::string& origin, const std::string& sender)
 {
-	SocketMapId::iterator it = m_clients.begin();
-
 	Tokens tokens;
 	Tokenizer::Tokenize(origin, " ", tokens);
 
@@ -289,7 +287,15 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 		});
 	}
 
-	while (it != m_clients.end())
+	// copy to temporary to prevent timing issue when the list changes
+	SocketMapId temp;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		temp.insert(m_clients.begin(), m_clients.end());
+	}
+
+	SocketMapId::iterator it = temp.begin();
+	while (it != temp.end())
 	{
 		auto socket = it->second;
 		m_pool.QueueTask([socket, packet, origin, sender, tokens, this]() mutable 
@@ -302,13 +308,6 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 			if (id.compare(tokens[0]) == 0 ||
 				(id.compare(sender) == 0 && IsPeer(sender)))
 				return;
-
-			// poll until we are ready to write to this socket
-			while (!socket->IsWriteReady())
-			{
-				// delay to prevent CPU hog
-				std::this_thread::sleep_for(std::chrono::milliseconds(5));
-			}
 
 			if (!PacketSender::Wait(socket) ||
 				!PacketSender::Send(packet.get(), socket))

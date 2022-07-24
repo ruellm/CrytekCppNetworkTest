@@ -1,19 +1,38 @@
 #include "SocketBase.h"
 
+#if defined(_WIN32)
+#define GETSOCKETERRNO() (WSAGetLastError())
+#else
+/* According to POSIX.1-2001 */
+#include <sys/select.h>
+
+/* According to earlier standards */
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#define GETSOCKETERRNO() (errno)
+#define SOCKET_ERROR -1
+#endif
 
 bool SocketBase::IsReadReady()
 {
-	FD_SET writeSet;
-	FD_SET readSet;
-	DWORD total;
-
+	fd_set readSet;
 	FD_ZERO(&readSet);
-	FD_ZERO(&writeSet);
-	FD_SET(m_handle, &readSet);
 
-	if ((total = select(0, &readSet, &writeSet, NULL, NULL)) == SOCKET_ERROR)
+	FD_SET(m_handle, &readSet);
+	int maxsock =0;
+
+	struct timeval tv;
+	tv.tv_sec = 120;
+	tv.tv_usec = 0;
+
+#ifndef Win32
+	maxsock = m_handle+1;
+#endif
+
+	if ((select(maxsock, &readSet, NULL, NULL, &tv)) == SOCKET_ERROR)
 	{
-		printf("select() returned with error %d\n", WSAGetLastError());
+		printf("select() returned with error %d\n", GETSOCKETERRNO());
 		return false;
 	}
 
@@ -28,17 +47,24 @@ bool SocketBase::IsReadReady()
 
 bool SocketBase::IsWriteReady()
 {
-	FD_SET writeSet;
-	FD_SET readSet;
-	DWORD total;
+	fd_set writeSet;
 
-	FD_ZERO(&readSet);
 	FD_ZERO(&writeSet);
 	FD_SET(m_handle, &writeSet);
 
-	if ((total = select(0, &readSet, &writeSet, NULL, NULL)) == SOCKET_ERROR)
+	int maxsock =0;
+
+	struct timeval tv;
+	tv.tv_sec = 120;
+	tv.tv_usec = 0;
+
+#ifndef Win32
+	maxsock = m_handle+1;
+#endif
+
+	if ((select(maxsock, NULL, &writeSet, NULL, &tv)) == SOCKET_ERROR)
 	{
-		printf("select() returned with error %d\n", WSAGetLastError());
+		printf("select() returned with error %d\n", GETSOCKETERRNO());
 		return false;
 	}
 
@@ -54,5 +80,9 @@ bool SocketBase::IsWriteReady()
 void SocketBase::UnBlock()
 {
 	u_long mode = 1;  // 1 to enable non-blocking socket
+#ifdef Win32
 	ioctlsocket(m_handle, FIONBIO, &mode);
+#else
+	ioctl(m_handle, FIONBIO, &mode);
+#endif
 }

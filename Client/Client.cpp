@@ -202,6 +202,9 @@ void ReadThread(const SClientOptions& options)
 		}
 
 		ProcessPacket(std::move(packet));
+
+		// give way for or thread to process
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
 }
 
@@ -314,7 +317,6 @@ void LoginIdentity(const std::string& id)
 	}
 
 	SPacketIdentiy identity(id);
-
 	PacketSender::Send(&identity, g_socket);
 
 	char buffer[MAX_BUFFER_LEN];
@@ -420,6 +422,13 @@ int MainClient(int argc, char *argv[])
 		}
 
 		std::this_thread::sleep_for(std::chrono::seconds(options.sendDelay));
+
+		if(options.sendDelay == 0)
+		{
+			// prevention for single thread and slow machines
+			// Add thread delay to prevent CPU hog and endless spinning and provide CPU time to the other thread.
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		}
 	}
 
 	// kill all thread when frequency is consumed
