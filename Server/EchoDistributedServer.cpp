@@ -101,6 +101,9 @@ void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& s
 			{
 				if (p.id == m_config.id)
 					continue;
+				
+				if (ClientExist(p.id))
+					continue;
 
 				std::cout << "[INFO] Attempt Connect to Peer " << p.address << " port " << p.port << "(" << p.id << ")...";
 				SocketPtr socket = SocketFactory::Create();
@@ -168,9 +171,6 @@ void CEchoDistributedServer::RunSockets(SocketPtr& socket, bool peers)
 		SocketPtr clientSocket = socket->Accept();
 		if (!clientSocket)
 			continue;
-
-		// make it as an unblocking socket
-		//clientSocket->UnBlock();
 
 		std::cout << "[INFO] Client socket connected \n" << std::endl;
 		ConfirmIdentity(clientSocket, peers);
@@ -302,21 +302,20 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 	SocketMapId::iterator it = temp.begin();
 	while (it != temp.end())
 	{
-		auto socket = it->second;
-		m_pool.QueueTask([socket, packet, origin, sender, tokens, this]() mutable 
+		auto to = it->second;
+		auto toId = GetSocketId(to);
+
+		// do not send to the same sender unless its the originating server
+		if (!to || toId == sender && IsPeer(sender))
+			continue;
+
+		m_pool.QueueTask([to, packet, origin, sender, tokens, toId, this]() mutable
 		{
-			// if receiver is a peer, set sender using new id?
-			auto id = GetSocketId(socket);
+			std::cout << "[INFO] Broadcasting packet to " << toId << "... \n" << std::endl;
 
-			// Do not send packet to sender or to originator node
-			// unless its a client node for echo
-			if (id.compare(tokens[0]) == 0 ||
-				(id.compare(sender) == 0 && IsPeer(sender)))
-				return;
-
-			if (!PacketSender::Send(packet.get(), socket))
+			if (!PacketSender::Send(packet.get(), to))
 			{
-				RemoveFromList(socket);
+				RemoveFromList(to);
 			}
 		});
 
@@ -408,8 +407,6 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 				// set originator node and reserialize
 				packet->from = m_config.id + " " + transactionId;
 			}
-
-			std::cout << "[INFO] Broadcasting packet ... \n" << std::endl;
 
 			source = packet->from;
 			BroadCastMessage(packet, source, id);

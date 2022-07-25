@@ -106,7 +106,6 @@ void AttemptConnect()
 
 		if (g_socket->Connect(server.host, server.port)) {
 			std::cout << "... Connected! \n" << std::endl;
-			//g_socket->UnBlock();
 
 			g_host = server.host;
 			g_port = server.port;
@@ -310,9 +309,7 @@ void LoginIdentity(const std::string& id)
 
 	char buffer[MAX_BUFFER_LEN];
 	
-	int len = 0;
-	//if (PacketReceiver::Wait(g_socket))
-	len = g_socket->Read(buffer, MAX_BUFFER_LEN);
+	int len = g_socket->Read(buffer, MAX_BUFFER_LEN);
 
 	if (len <= 0)
 		ExitWithError("[ERROR] Server Error in confirming Identity ");
@@ -388,10 +385,10 @@ void LaunchSenderThread(const SClientOptions& options)
 
 		if (options.sendDelay == 0)
 		{
-			// Add a small delay to prevent CPU hog and endless spinning and provide CPU time to the other 
+			// Add a small delay to prevent CPU hog and endless spinning and provide CPU time to the other (read)
 			// thread when send delay is 0 (no delay)
 			// this can be commented out for faster systems to speed up and rapidly send message
-			//std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
 	}
 }
