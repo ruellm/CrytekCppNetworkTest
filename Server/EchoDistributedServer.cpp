@@ -276,21 +276,20 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 	Tokens tokens;
 	Tokenizer::Tokenize(origin, " ", tokens);
 
-	if (!IsPeer(tokens[0]))
+	// check if message has been processed before
+	if (m_finishedTransactions.find(origin) != m_finishedTransactions.end())
+		return; //Data already processed in this server exiting;
+	
 	{
-		if (m_finishedTransactions.find(origin) != m_finishedTransactions.end())
-			return; //Data already processed in this server exiting;
-
-		{
-			std::lock_guard<std::mutex> lock(m_finishedMutex);
-			m_finishedTransactions[origin] = std::chrono::steady_clock::now();
-		}
-
-		m_pool.QueueTask([this]() mutable
-		{
-			CleanUpTransaction();
-		});
+		std::lock_guard<std::mutex> lock(m_finishedMutex);
+		m_finishedTransactions[origin] = std::chrono::steady_clock::now();
 	}
+
+	m_pool.QueueTask([this]() mutable
+	{
+		CleanUpTransaction();
+	});
+
 
 	// copy to temporary to prevent timing issue when the list changes
 	SocketMapId temp;
@@ -303,22 +302,23 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 	while (it != temp.end())
 	{
 		auto to = it->second;
-		auto toId = GetSocketId(to);
 
-		// do not send to the same sender unless its the originating server
-		if (!to || toId == sender && IsPeer(sender))
-			continue;
-
-		m_pool.QueueTask([to, packet, origin, sender, tokens, toId, this]() mutable
+		m_pool.QueueTask([to, packet, origin, sender, tokens, this]() mutable
 		{
-			std::cout << "[INFO] Broadcasting packet to " << toId << "... \n" << std::endl;
+			auto toId = GetSocketId(to);
 
+			// Do not send packet to sender or to originator node
+			// unless its a client node for echo
+			if ( (IsPeer(sender) && sender == toId) || tokens[0] == toId)
+				return;
+			
+			std::cout << "[INFO] Broadcasting packet to " << toId << "... \n" << std::endl;
 			if (!PacketSender::Send(packet.get(), to))
 			{
 				RemoveFromList(to);
 			}
 		});
-
+		
 		it++;
 	}
 }

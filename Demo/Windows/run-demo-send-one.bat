@@ -7,11 +7,11 @@ start Server.exe --id server_2 --port 9002 --peers ../peers.txt --type 2
 start Server.exe --id server_3 --port 9004 --peers ../peers.txt --type 0
 
 ::Add thread delay to make sure peers are connectecd to each other before we start the clients
-echo "Launching Clients in 5 seconds to make sure servers are already connected"
+#echo "Launching Clients in 5 seconds to make sure servers are already connected"
 TIMEOUT 5
 
 :: Run Listener clients
-start Client.exe --id client_2 --host localhost --port 9004 --listener
+start Client.exe --id client_3 --host localhost --port 9004 --listener
 
 :: make sure listener established its connections first
 TIMEOUT 2
