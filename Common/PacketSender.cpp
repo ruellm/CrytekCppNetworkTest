@@ -8,36 +8,32 @@ namespace PacketSender
 {
 	bool Send(IPacketBase* packet, SocketPtr& socket)
 	{
+		int written = 0;
+
 		char* buffer = nullptr;
 		size_t len = 0;
 		buffer = packet->Serialize(&len);
+		char* p = buffer;
+		size_t current = len;
 
-		// write the packet
-		int res = socket->Write(buffer, (int)len);
-		if (res <= 0)
-			return false;
-		
+		do {
+			bool terminate = false;
+			if (socket->IsWriteReady(&terminate)) {
+				int res = socket->Write(p, (int)current);
+				if (res <= 0)
+					goto exit;
+
+				p += res;
+				written += res;
+				current -= res;
+			}
+			else {
+				if (terminate)
+					goto exit;
+			}
+		} while (written != len);
+	exit:
 		delete[] buffer;
-		return true;
-	}
-
-	bool Wait(SocketPtr& socket)
-	{
-		int attempt = 0;
-		bool terminate = false;
-
-		while (!socket->IsWriteReady(&terminate))
-		{
-			if (terminate)
-				return false;
-
-			// delay to prevent CPU hog/spinning
-			std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_THREAD_DELAY));
-
-			if (++attempt >= WAIT_MAX_RETRY)
-				return false;
-		}
-
 		return true;
 	}
 }

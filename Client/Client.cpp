@@ -72,14 +72,6 @@ void ExitWithError(const std::string& error)
 	exit(1);
 }
 
-void SendStringMessage(const std::string& message)
-{
-	SPacketStringMessage packet;
-	packet.message = message;
-
-	PacketSender::Send(&packet, g_socket);
-}
-
 void Help()
 {
 	std::cout
@@ -114,7 +106,7 @@ void AttemptConnect()
 
 		if (g_socket->Connect(server.host, server.port)) {
 			std::cout << "... Connected! \n" << std::endl;
-			g_socket->UnBlock();
+			//g_socket->UnBlock();
 
 			g_host = server.host;
 			g_port = server.port;
@@ -190,10 +182,7 @@ void ReadThread(const SClientOptions& options)
 			return;
 
 		// poll until there is enough data in the socket
-		PacketPtr packet = nullptr;
-
-		if(PacketReceiver::Wait(g_socket))
-			packet = PacketReceiver::Receive(g_socket);
+		PacketPtr packet = PacketReceiver::Receive(g_socket);
 
 		// socket connection is lost
 		if (packet == nullptr)
@@ -320,10 +309,10 @@ void LoginIdentity(const std::string& id)
 	PacketSender::Send(&identity, g_socket);
 
 	char buffer[MAX_BUFFER_LEN];
-
+	
 	int len = 0;
-	if (PacketReceiver::Wait(g_socket))
-		len = g_socket->Read(buffer, MAX_BUFFER_LEN);
+	//if (PacketReceiver::Wait(g_socket))
+	len = g_socket->Read(buffer, MAX_BUFFER_LEN);
 
 	if (len <= 0)
 		ExitWithError("[ERROR] Server Error in confirming Identity ");
@@ -367,13 +356,6 @@ void LaunchSenderThread(const SClientOptions& options)
 		if (g_done)
 			break;
 
-		// wait until its ok to write to socket
-		if (!PacketSender::Wait(g_socket))
-		{
-			if (!OnDisconnect(options))
-				break;
-		}
-
 		if (!options.listenerOnly)
 		{
 			std::stringstream ss;
@@ -386,7 +368,14 @@ void LaunchSenderThread(const SClientOptions& options)
 
 			std::cout << "Sending message: " << nmsg << "\n" << std::endl;
 
-			SendStringMessage(nmsg);
+			SPacketStringMessage packet;
+			packet.message = nmsg;
+
+			if (!PacketSender::Send(&packet, g_socket))
+			{
+				OnDisconnect(options);
+				continue;
+			}
 
 			if (options.frequency != -1)
 			{

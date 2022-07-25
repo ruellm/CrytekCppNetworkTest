@@ -10,6 +10,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
+#include <cassert>
+
 #define GETSOCKETERRNO() (errno)
 #define SOCKET_ERROR -1
 #endif
@@ -102,6 +105,9 @@ void SocketBase::UnBlock()
 #ifdef WIN32
 	ioctlsocket(m_handle, FIONBIO, &mode);
 #else
-	ioctl(m_handle, FIONBIO, &mode);
+	int flags;
+	flags = fcntl(m_handle, F_GETFL, 0);
+	assert(flags != -1);
+	fcntl(m_handle, F_SETFL, flags | O_NONBLOCK);
 #endif
 }

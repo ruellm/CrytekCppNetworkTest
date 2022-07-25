@@ -6,5 +6,4 @@
 namespace PacketSender
 {
 	bool Send(IPacketBase* packet, SocketPtr& socket );
-	bool Wait(SocketPtr& socket);
 }

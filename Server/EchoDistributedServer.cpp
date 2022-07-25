@@ -48,9 +48,7 @@ bool CEchoDistributedServer::AddClient(SocketPtr& socket, const std::string& id,
 
 PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 {
-	PacketPtr packet = nullptr;
-	if(PacketReceiver::Wait(socket))
-		packet = PacketReceiver::Receive(socket);
+	PacketPtr packet = PacketReceiver::Receive(socket);
 	
 	if (packet == nullptr)
 	{
@@ -172,7 +170,7 @@ void CEchoDistributedServer::RunSockets(SocketPtr& socket, bool peers)
 			continue;
 
 		// make it as an unblocking socket
-		clientSocket->UnBlock();
+		//clientSocket->UnBlock();
 
 		std::cout << "[INFO] Client socket connected \n" << std::endl;
 		ConfirmIdentity(clientSocket, peers);
@@ -316,8 +314,7 @@ void CEchoDistributedServer::BroadCastMessage(PacketPtr& packet,
 				(id.compare(sender) == 0 && IsPeer(sender)))
 				return;
 
-			if (!PacketSender::Wait(socket) ||
-				!PacketSender::Send(packet.get(), socket))
+			if (!PacketSender::Send(packet.get(), socket))
 			{
 				RemoveFromList(socket);
 			}
@@ -352,9 +349,7 @@ void CEchoDistributedServer::ProcessClient(SocketPtr& socket)
 
 			std::cout << "[INFO] Waiting for Message \n" << std::endl;
 
-			PacketPtr packet = nullptr;
-			if (PacketReceiver::Wait(socket))
-				packet = PacketReceiver::Receive(socket);
+			PacketPtr packet = PacketReceiver::Receive(socket);
 
 			if (packet == nullptr)
 			{
