@@ -58,8 +58,11 @@ namespace PacketReceiver
 
 		//3. load data
 		int dlen = WaitRead(socket, temp, (int)dataSize);
-		if (dlen != dataSize)
+		if (dlen != dataSize) 
+		{
+			delete buffer;
 			return nullptr;
+		}
 
 		std::memcpy(buffer + sizeof(SPacketHeader), temp, dataSize);
 
