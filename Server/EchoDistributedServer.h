@@ -13,12 +13,21 @@ using SocketMapId = std::map<std::string, SocketPtr>;
 class CEchoDistributedServer
 {
 public:
+
+	enum class PeersConnectType : int
+	{
+		Duplex,												// server both listens and connects to peers
+		Listener,											// server only listens to connections from peers
+		Active												// server initiates connection to its peers
+	};
+
 	struct SConfig
 	{
-		std::string id;				// server identity
-		int port = 0;				// server port
-		int numOfThreads = 100;		// the number of threads in the thread pool
-		bool expand = false;		// will the server expand and create more thread if it runs out
+		std::string id;										// server identity
+		int port = 0;										// server port
+		int numOfThreads = 100;								// the number of threads in the thread pool
+		bool expand = false;								// will the server expand and create more thread if it runs out
+		PeersConnectType type = PeersConnectType::Duplex;	// Connection type of server to/from its peers
 	};
 	
 	struct ConnectionsData

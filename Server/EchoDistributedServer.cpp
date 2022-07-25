@@ -85,40 +85,47 @@ PacketPtr CEchoDistributedServer::ValidateIdentity(SocketPtr& socket)
 void CEchoDistributedServer::ConnectToPeers(const PeersList& peers, SocketPtr& socket)
 {
 	// Run and listen from peers socket
-	m_pool.QueueTask([socket, this]() mutable 
+	if (m_config.type == PeersConnectType::Duplex || m_config.type == PeersConnectType::Listener)
 	{
-		RunSockets(socket, true);
-	});
-
-	// connects to each peers
-	m_pool.QueueTask([peers, this]() mutable 
-	{
-		for (auto p : peers)
+		m_pool.QueueTask([socket, this]() mutable
 		{
-			if (p.id == m_config.id)
-				continue;
+			RunSockets(socket, true);
+		});
 
-			std::cout << "[INFO] Attempt Connect to Peer " << p.address << " port " << p.port << "("<< p.id << ")...";
-			SocketPtr socket = SocketFactory::Create();
-			if (!socket->Connect(p.address.c_str(), p.port)) {
-				std::cout << " Error\n";
-				continue;
-			}
+	}
 
-			SPacketIdentiy identity(m_config.id);
-			PacketSender::Send(&identity, socket);
-			if (!ValidateIdentity(socket))
-				continue;
-
-			if (!AddClient(socket, p.id, true))
-				continue;
-
-			m_pool.QueueTask([socket, this]() mutable 
+	if (m_config.type == PeersConnectType::Duplex || m_config.type == PeersConnectType::Active)
+	{
+		// connects to each peers
+		m_pool.QueueTask([peers, this]() mutable
+		{
+			for (auto p : peers)
 			{
-				ProcessClient(socket);
-			});
-		}
-	});
+				if (p.id == m_config.id)
+					continue;
+
+				std::cout << "[INFO] Attempt Connect to Peer " << p.address << " port " << p.port << "(" << p.id << ")...";
+				SocketPtr socket = SocketFactory::Create();
+				if (!socket->Connect(p.address.c_str(), p.port)) {
+					std::cout << " Error\n";
+					continue;
+				}
+
+				SPacketIdentiy identity(m_config.id);
+				PacketSender::Send(&identity, socket);
+				if (!ValidateIdentity(socket))
+					continue;
+
+				if (!AddClient(socket, p.id, true))
+					continue;
+
+				m_pool.QueueTask([socket, this]() mutable
+				{
+					ProcessClient(socket);
+				});
+			}
+		});
+	}
 }
 
 bool CEchoDistributedServer::BasicHandShake(const std::string& id)

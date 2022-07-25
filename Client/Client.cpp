@@ -61,6 +61,7 @@ static std::atomic<bool>		g_pause(false);
 static std::condition_variable	g_condition;
 static std::mutex				g_mutex;
 static std::mutex				g_socketMutex;
+
 static std::string				g_id;
 
 void LoginIdentity(const std::string& id);
@@ -208,7 +209,6 @@ void ReadThread(const SClientOptions& options)
 	}
 }
 
-
 SClientOptions LoadProgramOptions(int argc, char *argv[])
 {
 	SClientOptions config;
@@ -342,38 +342,12 @@ void LoginIdentity(const std::string& id)
 
 void ValidateOptions(const SClientOptions& options)
 {
-	//if (options.sendDelay == 0)
-	//	ExitWithError("[ERROR] Send Delay should not be 0");
 	if (options.reconnectDelay == 0)
 		ExitWithError("[ERROR] Reconnect Delay should not be 0");
 }
 
-int MainClient(int argc, char *argv[])
+void LaunchSenderThread(const SClientOptions& options)
 {
-	std::cout << "===== Distributed Echo Client v2.0 ==== \n\n";
-
-	// prepare the options
-	auto options = LoadProgramOptions(argc, argv);
-
-	// validate options
-	ValidateOptions(options);
-
-	// build the server list to connect to
-	BuildServerList(options);
-
-	// attempt to connect from server list
-	AttemptConnect();
-
-	// Announce our identity to the server
-	LoginIdentity(options.id);
-
-	// Since client receives information from server from broadcast from other client/servers
-	// a read thread is launched separately
-	std::thread thread(ReadThread, options);
-
-	std::cout << " Running Client ID " << options.id 
-		<< (options.listenerOnly? " as LISTENER " : "") <<" \n";
-
 	// Start Sending Message (in main thread)
 	int i = 0;
 	while (true)
@@ -423,13 +397,43 @@ int MainClient(int argc, char *argv[])
 
 		std::this_thread::sleep_for(std::chrono::seconds(options.sendDelay));
 
-		if(options.sendDelay == 0)
+		if (options.sendDelay == 0)
 		{
-			// prevention for single thread and slow machines
-			// Add thread delay to prevent CPU hog and endless spinning and provide CPU time to the other thread.
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			// Add a small delay to prevent CPU hog and endless spinning and provide CPU time to the other 
+			// thread when send delay is 0 (no delay)
+			// this can be commented out for faster systems to speed up and rapidly send message
+			//std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		}
 	}
+}
+
+int MainClient(int argc, char *argv[])
+{
+	std::cout << "===== Distributed Echo Client v2.0 ==== \n\n";
+
+	// prepare the options
+	auto options = LoadProgramOptions(argc, argv);
+
+	// validate options
+	ValidateOptions(options);
+
+	// build the server list to connect to
+	BuildServerList(options);
+
+	// attempt to connect from server list
+	AttemptConnect();
+
+	// Announce our identity to the server
+	LoginIdentity(options.id);
+
+	std::cout << " Running Client ID " << options.id 
+		<< (options.listenerOnly? " as LISTENER " : "") <<" \n";
+
+	// Since client receives information from server from broadcast from other client/servers
+	// a read thread is launched separately
+	std::thread thread(ReadThread, options);
+
+	LaunchSenderThread(options);
 
 	// kill all thread when frequency is consumed
 	g_done = true;
@@ -442,6 +446,13 @@ int MainClient(int argc, char *argv[])
 
 	// cleanup whatever initialized (for windows socket)
 	SocketFactory::Destroy();
+
+	// add interactive mode before exit to notify user processing is done
+	if (options.frequency != -1)
+	{
+		std::cout << "Processing complete, Press Return key to exit... \n";
+		getchar();
+	}
 
 	return 0;
 }

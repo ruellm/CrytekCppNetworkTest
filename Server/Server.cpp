@@ -56,11 +56,13 @@ void Help()
 		<< "Usage Server [OPTIONS]\n"
 		<< "Options:\n\n"
 		<< "    -h,--help  Display Help\n"
+		<< "    --type <int> server peers connection type (0: [default] duplex, 1: listener only, 2: active/connects to peers in config) \n"
 		<< "    -i,--id <string> server identity (REQUIRED) \n"
 		<< "    -p,--port <number> server port to listens to (REQUIRED) \n"
 		<< "    --thread-count <number> max number of threads in the thread pool to (default 100)\n"
 		<< "    --expand <true/false> will the server expand and create more thread if it runs out (default false) \n"
 		<< "    --peers <filename> loads the peers server list from file (optional) \n\n\n";
+
 	
 	exit(1);
 }
@@ -85,6 +87,8 @@ SServerOptions LoadProgramOptions(int argc, char *argv[])
 			options.config.id = argv[++i];
 		else if (arg == "--peers" && i + 1 < argc)
 			options.peersConfig = argv[++i];
+		else if (arg == "--type" && i + 1 < argc)
+			options.config.type = (CEchoDistributedServer::PeersConnectType)atoi(argv[++i]);
 		else if (arg == "-h" || arg == "--help")
 			Help();
 	}

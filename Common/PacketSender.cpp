@@ -31,7 +31,7 @@ namespace PacketSender
 			if (terminate)
 				return false;
 
-			// delay to prevent CPU hog
+			// delay to prevent CPU hog/spinning
 			std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_THREAD_DELAY));
 
 			if (++attempt >= WAIT_MAX_RETRY)
