@@ -177,11 +177,12 @@ void ReadThread(const SClientOptions& options)
 {
 	while (true)
 	{
-		if (g_done)
-			return;
 
 		// poll until there is enough data in the socket
 		PacketPtr packet = PacketReceiver::Receive(g_socket);
+
+		if (g_done)
+			return;
 
 		// socket connection is lost
 		if (packet == nullptr)
@@ -395,7 +396,7 @@ void LaunchSenderThread(const SClientOptions& options)
 
 int MainClient(int argc, char *argv[])
 {
-	std::cout << "===== Distributed Echo Client v2.0 ==== \n\n";
+	std::cout << "===== Distributed Echo Client v2.2 ==== \n\n";
 
 	// prepare the options
 	auto options = LoadProgramOptions(argc, argv);
@@ -421,6 +422,17 @@ int MainClient(int argc, char *argv[])
 
 	LaunchSenderThread(options);
 
+	// add interactive mode before exit to notify user processing is done
+	// and to give way to last receive of data
+	if (options.frequency != -1)
+	{
+		std::cout << "Processing complete, Press Return key to exit... \n";
+		getchar();
+	}
+
+	// close the socket
+	g_socket->Disconnect();
+
 	// kill all thread when frequency is consumed
 	g_done = true;
 
@@ -432,13 +444,6 @@ int MainClient(int argc, char *argv[])
 
 	// cleanup whatever initialized (for windows socket)
 	SocketFactory::Destroy();
-
-	// add interactive mode before exit to notify user processing is done
-	if (options.frequency != -1)
-	{
-		std::cout << "Processing complete, Press Return key to exit... \n";
-		getchar();
-	}
 
 	return 0;
 }
